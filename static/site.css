@@ -60,3 +60,6 @@ table.data th[aria-sort="descending"]::after { content: " ↓"; }
 /* A table of an article may be wider than its column of text, up to the page's width. */
 main.text .table-box { width: min(900px, calc(100vw - 32px)); margin-left: 50%; transform: translateX(-50%); }
 @media (max-width: 560px) { table.data { font-size: 13px; } table.data th, table.data td { padding: 6px 7px; } }
+/* The chart inside an article breaks out of the text column as a table does. */
+main.text .hb-embed { width: min(900px, calc(100vw - 32px)); margin: 22px 0 22px 50%; transform: translateX(-50%); font-size: 15px; }
+main.text .hb-embed img { margin: 0 auto; }

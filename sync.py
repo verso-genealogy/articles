@@ -28,6 +28,15 @@ def main(corpus: Path, bench: Path) -> None:
     (ROOT / "data/arms.json").write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     rows = json.loads((bench / "report/dashboard.json").read_text(encoding="utf-8"))
     rows = [r for r in rows if not OTHER_CONDITION.search(r["arm"])]
+    for r in rows:                      # a configuration read more than once stands as the mean of its runs, as in the tables
+        pooled = kept["twice"].get(r["arm"]) if r["split"] == "test" else None
+        if pooled:
+            r.update(silent_per_100=round(pooled["silent"], 2), errors_per_100=round(pooled["all"], 2),
+                     loud_per_100=round(pooled["all"] - pooled["silent"], 2), review_per_100=round(pooled["review"], 2),
+                     flagged_pct=round(pooled["flagged"], 1), usd_per_100_batch=round(pooled["cost"], 3),
+                     silent_ci=[round(pooled["lo"], 2), round(pooled["hi"], 2)],
+                     errors_ci=[round(pooled["all_lo"], 2), round(pooled["all_hi"], 2)],
+                     review_ci=[round(pooled["review_lo"], 2), round(pooled["review_hi"], 2)], runs=int(pooled["runs"]))
     (ROOT / "data/results.json").write_text(json.dumps(rows, ensure_ascii=False) + "\n", encoding="utf-8")
 
 

@@ -154,7 +154,7 @@ const dash = (() => {
     pts.on('pointerenter', (ev, r) => {
       tip.replaceChildren();
       const head = document.createElement('div'); const b = document.createElement('b'); b.textContent = named(r.arm); head.append(b);
-      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${r.vendor} · ${r.records} записей`;
+      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${r.vendor} · ${r.records} записей` + (r.runs > 1 ? ` · среднее ${r.runs} прогонов` : '');
       const iv = r.lohi ? `, интервал ${d3.format('.1f')(r.lohi[0])}–${d3.format('.1f')(r.lohi[1])}` : '';
       const lr = document.createElement('div'); lr.textContent = `${d3.format('.2f')(r.silent)} — ${AXIS[metric()].replace(' ↓', '')}${iv}`;
       const l0 = document.createElement('div'); l0.textContent = `${d3.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имён`;

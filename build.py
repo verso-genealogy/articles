@@ -86,6 +86,35 @@ def table(rows: list[dict], *, ident: str = "") -> str:
             f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>")
 
 
+CHART_HEAD = ('<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>\n'
+              '<link rel="stylesheet" href="../assets/chart.css">\n')
+
+
+def chart_embed() -> str:
+    """The chart of the test set inside an article: the filters, the legend and the plot of the chart page, and
+    the picture it replaces for a reader without scripts."""
+    page_text = (ROOT / "static/chart.html").read_text(encoding="utf-8")
+
+    def block(start: str, end: str) -> str:
+        i = page_text.index(start)
+        return page_text[i:page_text.index(end, i) + len(end)]
+
+    filters = block('<div class="hb-filter" id="filter"', "</div>") + "\n" + block('<div class="hb-filter" id="metric"', "</div>")
+    legend = block('<div class="hb-legend" id="legend-test"', "</div>")
+    return f"""<div class="hb hb-embed">
+{filters}
+<div class="hb-card">
+{legend}
+<div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
+</div>
+<p class="hb-note">Каждая точка это конфигурация: правее дороже, ниже больше ошибок. Наведите на точку, чтобы увидеть числа,
+кнопками выберите модели и меру. Здесь все {len(configurations())} конфигурации; та же диаграмма с отладочной выборкой и таблицей
+стоит <a href="../chart/">на отдельной странице</a>.</p>
+<noscript><img src="../img/cost-vs-silent.png" alt="Цена и тихие ошибки: все конфигурации"></noscript>
+</div>
+<script src="../assets/chart.js"></script>"""
+
+
 def article(name: str, slug: str) -> None:
     text = (ROOT / "content" / f"{name}.md").read_text(encoding="utf-8")
     main = json.loads((ROOT / "data/main-table.json").read_text(encoding="utf-8"))["main"]
@@ -93,10 +122,13 @@ def article(name: str, slug: str) -> None:
     title = re.search(r"^# (.+)$", text, re.M).group(1)
     body = markdown.markdown(text, extensions=["tables", "fenced_code"])
     body = body.replace("<p>{{TABLE}}</p>", table(rows))
+    charted = "<p>{{CHART}}</p>" in body
+    body = body.replace("<p>{{CHART}}</p>", chart_embed())
     body = re.sub(r"<table>", '<div class="table-box"><table class="data">', body).replace("</table>", "</table></div>")
     body = re.sub(r'<p>(<img [^>]+>)</p>', r'<figure>\1</figure>', body)
     (OUT / slug).mkdir(parents=True, exist_ok=True)
-    (OUT / slug / "index.html").write_text(page(title, f"<article>{body}</article>", 1, here=f"{slug}/"), encoding="utf-8")
+    (OUT / slug / "index.html").write_text(
+        page(title, f"<article>{body}</article>", 1, here=f"{slug}/", extra_head=CHART_HEAD if charted else ""), encoding="utf-8")
 
 
 def full_table() -> None:
@@ -113,12 +145,10 @@ def full_table() -> None:
 
 def chart() -> None:
     body = (ROOT / "static/chart.html").read_text(encoding="utf-8")
-    head = ('<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>\n'
-            '<link rel="stylesheet" href="../assets/chart.css">\n')
     (OUT / "chart").mkdir(parents=True, exist_ok=True)
     (OUT / "chart" / "index.html").write_text(
         page("Диаграмма: цена и качество чтения", body + '\n<script src="../assets/chart.js"></script>', 1, here="chart/",
-             wide=True, extra_head=head), encoding="utf-8")
+             wide=True, extra_head=CHART_HEAD), encoding="utf-8")
 
 
 def home() -> None:

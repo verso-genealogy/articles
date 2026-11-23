@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Какой моделью читать старинные документы: 53 конфигурации LLM на рукописях XVIII-XIX веков</title>
 <link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="../assets/chart.css">
 </head>
 <body>
 <header class="site-head">
@@ -87,7 +89,57 @@
 <li>Флагман Alibaba Qwen4 Max на high делает 21 тихую ошибку, столько же, сколько Sonnet на low.</li>
 <li>Grok 4.7 делает 28. На отладочной выборке Grok был слаб на всех уровнях, поэтому в основной прогон я взял только самый дешевый.</li>
 </ul>
-<figure><img alt="Цена и тихие ошибки: 53 конфигурации на 167 записях" src="../img/cost-vs-silent.png" /></figure>
+<div class="hb hb-embed">
+<div class="hb-filter" id="filter" role="group" aria-label="Модели">
+    <span class="hb-filter-label">Модели:</span>
+    <button type="button" class="hb-chip hb-model" data-model="" aria-pressed="true">Все</button>
+    <button type="button" class="hb-chip hb-model" data-model="haiku" aria-pressed="false">Haiku 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="sonnet" aria-pressed="false">Sonnet 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus" aria-pressed="false">Opus 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus5" aria-pressed="false">Opus 5</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable" aria-pressed="false">Fable 5.1</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable52" aria-pressed="false">Fable 5.2</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.8-flash" aria-pressed="false">Gemini 3.8 Flash</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-argon" aria-pressed="false">Gemini 4 Argon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-carbon" aria-pressed="false">Gemini 4 Carbon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-neon" aria-pressed="false">Gemini 4 Neon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-hydrogen" aria-pressed="false">Gemini 4 Hydrogen</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.1-pro-preview" aria-pressed="false">Gemini 3.1 Pro</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-sol" aria-pressed="false">GPT 6.2 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-astra" aria-pressed="false">GPT 6.2 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-terra" aria-pressed="false">GPT 6.1 Terra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-sol" aria-pressed="false">GPT 6.1 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-astra" aria-pressed="false">GPT 6 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-luna" aria-pressed="false">GPT 6 Luna</button>
+    <button type="button" class="hb-chip hb-model" data-model="grok-4.7" aria-pressed="false">Grok 4.7</button>
+    <button type="button" class="hb-chip hb-model" data-model="qwen4-max" aria-pressed="false">Qwen4 Max</button>
+  </div>
+<div class="hb-filter" id="metric" role="group" aria-label="Какие ошибки">
+    <span class="hb-filter-label">Мера:</span>
+    <button type="button" class="hb-chip hb-metric" data-metric="silent" aria-pressed="true">Тихие ошибки</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="all" aria-pressed="false">Все ошибки</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="loud" aria-pressed="false">Помеченные</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="review" aria-pressed="false">Цена вычитки</button>
+  </div>
+<div class="hb-card">
+<div class="hb-legend" id="legend-test" aria-label="Обозначения">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Claude</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>уровни effort одной модели</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95-процентный интервал</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>не выбрана в фильтре</span>
+    </div>
+<div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
+</div>
+<p class="hb-note">Каждая точка это конфигурация: правее дороже, ниже больше ошибок. Наведите на точку, чтобы увидеть числа,
+кнопками выберите модели и меру. Здесь все 53 конфигурации; та же диаграмма с отладочной выборкой и таблицей
+стоит <a href="../chart/">на отдельной странице</a>.</p>
+<noscript><img src="../img/cost-vs-silent.png" alt="Цена и тихие ошибки: все конфигурации"></noscript>
+</div>
+<script src="../assets/chart.js"></script>
 <p><strong>7. Маленькие модели для этой задачи не годятся.</strong> У Haiku 33-52 тихие ошибки на 100 имен, у GPT-6 Luna 52-54. Это каждое второе или третье имя.</p>
 <h2>Заключение</h2>
 <p>Что бы я советовал по итогам моих измерений для чтения русских рукописей XIX века:</p>
