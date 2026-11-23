@@ -29,7 +29,7 @@ PROFILE = "https://github.com/dmalch"
 PUBLISHED = {"models": date(2026, 11, 23)}
 #: Where an article's preview on the home page ends: a line of its own in the article's text.
 CUT = "<!--more-->"
-GOATCOUNTER = ""   # the site's code at goatcounter.com (<code>.goatcounter.com); empty: no counter on the pages
+GOATCOUNTER = "dmlach"   # the site's code at goatcounter.com (<code>.goatcounter.com); empty: no counter on the pages
 GITHUB_MARK = ('<svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59'
                '.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53'
                '.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15'
