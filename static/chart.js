@@ -44,7 +44,7 @@ const dash = (() => {
   const shown = (arm) => { const p = picked(); return p.length === 0 || p.includes(family(arm)); };
   const METRICS = {review: 'review_per_100', silent: 'silent_per_100', loud: 'loud_per_100', all: 'errors_per_100'};
   const CI = {review: 'review_ci', silent: 'silent_ci', all: 'errors_ci'};
-  const AXIS = {review: 'цена вычитки на 100 имён ↓', silent: 'тихих ошибок на 100 имён ↓', loud: 'помеченных ошибок на 100 имён ↓', all: 'всех ошибок на 100 имён ↓'};
+  const AXIS = {review: 'цена вычитки на 100 имён', silent: 'тихих ошибок на 100 имён', loud: 'помеченных ошибок на 100 имён', all: 'всех ошибок на 100 имён'};
   const metric = () => (METRICS[dash.params().metric] ? dash.params().metric : 'silent');
   const ci = (r) => { const v = CI[metric()] && r[CI[metric()]]; const a = typeof v === 'string' ? JSON.parse(v) : v; return Array.isArray(a) ? a.map(Number) : null; };
   document.querySelectorAll('.hb-metric').forEach((chip) => chip.addEventListener('click', () => {
@@ -84,16 +84,17 @@ const dash = (() => {
     const W = Math.max(320, el.clientWidth), H = 420, m = {top: 16, right: 24, bottom: 44, left: 52};
     const x = d3.scaleLog([0.02, Math.max(10, d3.max(rows, (r) => r.usd) * 1.6)], [m.left, W - m.right]);
     const lo = d3.min(rows, (r) => (r.lohi ? r.lohi[0] : r.silent)), hi = d3.max(rows, (r) => (r.lohi ? r.lohi[1] : r.silent));
-    const y = d3.scaleLinear([Math.max(0, Math.floor(lo) - 2), hi + 3],
-      [m.top, H - m.bottom]);
+    // As the article's chart: fewer errors lower, on a logarithmic scale that keeps the leaders apart.
+    const y = d3.scaleLog([Math.max(0.5, lo * 0.85), hi * 1.12], [H - m.bottom, m.top]).clamp(true);
+    const yticks = [0.5, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 80].filter((v) => v >= y.domain()[0] && v <= y.domain()[1]);
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
       .attr('aria-label', `Тихие ошибки на 100 имён против цены, ${split}`);
-    svg.append('g').selectAll('line').data(y.ticks(6)).join('line')
+    svg.append('g').selectAll('line').data(yticks).join('line')
       .attr('x1', m.left).attr('x2', W - m.right).attr('y1', y).attr('y2', y).style('stroke', 'var(--line)');
     const xticks = [0.03, 0.1, 0.3, 1, 3, 10, 30].filter((v) => v <= x.domain()[1]);
     const ax = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`)
       .call(d3.axisBottom(x).tickValues(xticks).tickFormat((v) => '$' + v).tickSizeOuter(0));
-    const ay = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).ticks(6).tickSizeOuter(0));
+    const ay = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yticks).tickFormat(d3.format('~g')).tickSizeOuter(0));
     [ax, ay].forEach((a) => {
       a.attr('font-size', null).attr('font-family', null);
       a.selectAll('text').style('fill', 'var(--muted)').style('font-size', '13px');
@@ -113,8 +114,8 @@ const dash = (() => {
     svg.append('g').selectAll('line').data(rows.filter((r) => r.lohi && shown(r.arm))).join('line')
       .attr('x1', (r) => x(r.usd)).attr('x2', (r) => x(r.usd)).attr('y1', (r) => y(r.lohi[0])).attr('y2', (r) => y(r.lohi[1]))
       .style('stroke', (r) => color(r.vendor)).style('stroke-width', 2).style('stroke-opacity', 0.3).style('stroke-linecap', 'round');
-    svg.append('text').attr('x', m.left + 8).attr('y', m.top + 12)
-      .style('fill', 'var(--muted)').style('font-size', '13px').text('↖ лучше: дешевле и меньше ошибок');
+    svg.append('text').attr('x', m.left + 8).attr('y', H - m.bottom - 8)
+      .style('fill', 'var(--muted)').style('font-size', '13px').text('↙ лучше: дешевле и меньше ошибок');
     const tip = document.createElement('div');
     tip.className = 'hb-tip'; tip.hidden = true; el.append(tip);
     const pts = svg.append('g').selectAll('path').data([...rows].sort((a, b) => shown(a.arm) - shown(b.arm))).join('path')
@@ -135,7 +136,7 @@ const dash = (() => {
       if (picked().length || LABELLED.has(best.arm)) rs.forEach((r) => want.push({r, text: EFFORT_TAG[r.arm.split('-').pop()] ?? '', strong: false}));
     }
     const boxes = rows.map((r) => ({x0: x(r.usd) - 6, x1: x(r.usd) + 6, y0: y(r.silent) - 6, y1: y(r.silent) + 6}));
-    boxes.push({x0: m.left, x1: m.left + 230, y0: m.top, y1: m.top + 16});
+    boxes.push({x0: m.left, x1: m.left + 230, y0: H - m.bottom - 22, y1: H - m.bottom});
     const hits = (b) => b.x0 < m.left || b.x1 > W - 2 || b.y0 < 0 || b.y1 > H - m.bottom
       || boxes.some((o) => b.x0 < o.x1 && b.x1 > o.x0 && b.y0 < o.y1 && b.y1 > o.y0);
     const lg = svg.append('g');
@@ -156,7 +157,7 @@ const dash = (() => {
       const head = document.createElement('div'); const b = document.createElement('b'); b.textContent = named(r.arm); head.append(b);
       const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${r.vendor} · ${r.records} записей` + (r.runs > 1 ? ` · среднее ${r.runs} прогонов` : '');
       const iv = r.lohi ? `, интервал ${d3.format('.1f')(r.lohi[0])}–${d3.format('.1f')(r.lohi[1])}` : '';
-      const lr = document.createElement('div'); lr.textContent = `${d3.format('.2f')(r.silent)} — ${AXIS[metric()].replace(' ↓', '')}${iv}`;
+      const lr = document.createElement('div'); lr.textContent = `${d3.format('.2f')(r.silent)} — ${AXIS[metric()]}${iv}`;
       const l0 = document.createElement('div'); l0.textContent = `${d3.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имён`;
       const l1 = document.createElement('div'); l1.textContent = `${d3.format('.2f')(Number(r.silent_per_100))} тихих, ${d3.format('.2f')(Number(r.loud_per_100))} помеченных`;
       const l2 = document.createElement('div'); l2.textContent = `${d3.format('.1f')(Number(r.flagged_pct))} % помечено`;

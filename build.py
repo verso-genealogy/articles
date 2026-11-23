@@ -107,7 +107,7 @@ def chart_embed() -> str:
 {legend}
 <div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
 </div>
-<p class="hb-note">Каждая точка это конфигурация: правее дороже, ниже больше ошибок. Наведите на точку, чтобы увидеть числа,
+<p class="hb-note">Каждая точка это конфигурация: правее дороже, выше больше ошибок. Наведите на точку, чтобы увидеть числа,
 кнопками выберите модели и меру. Здесь все {len(configurations())} конфигурации; та же диаграмма с отладочной выборкой и таблицей
 стоит <a href="../chart/">на отдельной странице</a>.</p>
 <noscript><img src="../img/cost-vs-silent.png" alt="Цена и тихие ошибки: все конфигурации"></noscript>
