@@ -44,7 +44,7 @@ const dash = (() => {
   const shown = (arm) => { const p = picked(); return p.length === 0 || p.includes(family(arm)); };
   const METRICS = {review: 'review_per_100', silent: 'silent_per_100', loud: 'loud_per_100', all: 'errors_per_100'};
   const CI = {review: 'review_ci', silent: 'silent_ci', all: 'errors_ci'};
-  const AXIS = {review: 'цена вычитки на 100 имён', silent: 'тихих ошибок на 100 имён', loud: 'помеченных ошибок на 100 имён', all: 'всех ошибок на 100 имён'};
+  const AXIS = {review: 'цена вычитки на 100 имён', silent: 'тихих ошибок на 100 имён', loud: 'ошибок под вопросом на 100 имён', all: 'всех ошибок на 100 имён'};
   const metric = () => (METRICS[dash.params().metric] ? dash.params().metric : 'silent');
   const ci = (r) => { const v = CI[metric()] && r[CI[metric()]]; const a = typeof v === 'string' ? JSON.parse(v) : v; return Array.isArray(a) ? a.map(Number) : null; };
   document.querySelectorAll('.hb-metric').forEach((chip) => chip.addEventListener('click', () => {
@@ -159,8 +159,8 @@ const dash = (() => {
       const iv = r.lohi ? `, интервал ${d3.format('.1f')(r.lohi[0])}–${d3.format('.1f')(r.lohi[1])}` : '';
       const lr = document.createElement('div'); lr.textContent = `${d3.format('.2f')(r.silent)} — ${AXIS[metric()]}${iv}`;
       const l0 = document.createElement('div'); l0.textContent = `${d3.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имён`;
-      const l1 = document.createElement('div'); l1.textContent = `${d3.format('.2f')(Number(r.silent_per_100))} тихих, ${d3.format('.2f')(Number(r.loud_per_100))} помеченных`;
-      const l2 = document.createElement('div'); l2.textContent = `${d3.format('.1f')(Number(r.flagged_pct))} % помечено`;
+      const l1 = document.createElement('div'); l1.textContent = `${d3.format('.2f')(Number(r.silent_per_100))} тихих, ${d3.format('.2f')(Number(r.loud_per_100))} под вопросом`;
+      const l2 = document.createElement('div'); l2.textContent = `${d3.format('.1f')(Number(r.flagged_pct))} % полей под вопросом`;
       const l3 = document.createElement('div'); l3.textContent = `${fmtUsd(r.usd)} за 100 записей`;
       tip.append(head, sub, lr, l0, l1, l2, l3); tip.hidden = false;
       const px = x(r.usd) / W * el.clientWidth, py = y(r.silent) / H * el.clientHeight;
