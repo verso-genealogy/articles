@@ -1,6 +1,7 @@
 // The data layer of the page: the rows of data/results.json, the filters' state, and a redraw whenever either
 // or the width changes. The chart code below asks it for rows (data), registers what it draws (draw) and
 // what follows the filters (onData).
+const SITE_ROOT = document.currentScript.src.replace(/assets\/chart\.js.*$/, '');
 const dash = (() => {
   let rows = [], status = 'loading', params = {};
   const draws = [], listeners = [];
@@ -14,7 +15,7 @@ const dash = (() => {
   window.addEventListener('themechange', render);
   document.addEventListener('DOMContentLoaded', () => {
     render();
-    fetch('../data/results.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    fetch(SITE_ROOT + 'data/results.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
       .then((data) => { rows = data; status = 'ok'; render(); })
       .catch(() => { status = 'error'; render(); });
   });
@@ -29,6 +30,24 @@ const dash = (() => {
 
 (() => {
 
+  // The page's language (<html lang>): what the chart says, and how it prints a number.
+  const ENGLISH = document.documentElement.lang === 'en';
+  const T = ENGLISH ? {
+    none: 'no reasoning', frames: ', high-resolution frames', failed: 'Could not load the data',
+    aria: (split) => `Silent errors per 100 names against price, ${split}`, price: '$ per 100 records, batch',
+    better: '↙ better: cheaper and fewer errors', records: (n) => `${n} records`, mean: (n) => ` · mean of ${n} runs`,
+    interval: ', interval ', all: ' all errors per 100 names', silent: ' silent, ', flagged: ' flagged', pct: '% of fields flagged',
+    per: ' per 100 records', percent: '%',
+    axis: {review: 'proofreading cost per 100 names', silent: 'silent errors per 100 names', loud: 'flagged errors per 100 names', all: 'all errors per 100 names'},
+  } : {
+    none: 'без рассуждений', frames: ', кадры в высоком разрешении', failed: 'Не удалось загрузить данные',
+    aria: (split) => `Тихие ошибки на 100 имен против цены, ${split}`, price: '$ за 100 записей, пакетом',
+    better: '↙ лучше: дешевле и меньше ошибок', records: (n) => `${n} записей`, mean: (n) => ` · среднее ${n} прогонов`,
+    interval: ', интервал ', all: ' всех ошибок на 100 имен', silent: ' тихих, ', flagged: ' под вопросом', pct: ' % полей под вопросом',
+    per: ' за 100 записей', percent: ' %',
+    axis: {review: 'цена вычитки на 100 имен', silent: 'тихих ошибок на 100 имен', loud: 'ошибок под вопросом на 100 имен', all: 'всех ошибок на 100 имен'},
+  };
+
   const VENDORS = ['Claude', 'Google', 'OpenAI', 'xAI', 'Alibaba'];
   const SYMBOLS = [d3.symbolCircle, d3.symbolTriangle, d3.symbolSquare, d3.symbolDiamond, d3.symbolCross];
   const EFFORTS = ['none', 'off', 'low', 'medium', 'high', 'xhigh'];
@@ -42,8 +61,9 @@ const dash = (() => {
   const LEVEL = /-(none|off|low|medium|high|xhigh)$/;
   const full = (arm) => { const base = arm.replace(/-ultrahigh$/, ''); const level = (base.match(LEVEL) || [])[1];
     const model = MODELS[base.replace(LEVEL, '')] || base.replace(LEVEL, '');
-    return `${model}, ${level === 'none' || level === 'off' ? 'без рассуждений' : level}` + (arm.endsWith('-ultrahigh') ? ', кадры в высоком разрешении' : ''); };
-  const RU = d3.formatLocale({decimal: ',', thousands: '\u00a0', grouping: [3], currency: ['$', '']});
+    return `${model}, ${level === 'none' || level === 'off' ? T.none : level}` + (arm.endsWith('-ultrahigh') ? T.frames : ''); };
+  const RU = d3.formatLocale(ENGLISH ? {decimal: '.', thousands: ',', grouping: [3], currency: ['$', '']}
+    : {decimal: ',', thousands: '\u00a0', grouping: [3], currency: ['$', '']});
   const SPLIT = {test: 'основной', dev: 'отладочный'};
   const MAKER = (vendor) => (vendor === 'Claude' ? 'Anthropic' : vendor);
   const named = (arm) => arm.replace(/^(haiku|sonnet|opus5|opus|fable52|fable)(?=-|$)/, (f) => `${f.replace(/\d+$/, '')}-${VERSION[f]}`);
@@ -54,7 +74,7 @@ const dash = (() => {
   const shown = (arm) => { const p = picked(); return p.length === 0 || p.includes(family(arm)); };
   const METRICS = {review: 'review_per_100', silent: 'silent_per_100', loud: 'loud_per_100', all: 'errors_per_100'};
   const CI = {review: 'review_ci', silent: 'silent_ci', all: 'errors_ci'};
-  const AXIS = {review: 'цена вычитки на 100 имен', silent: 'тихих ошибок на 100 имен', loud: 'ошибок под вопросом на 100 имен', all: 'всех ошибок на 100 имен'};
+  const AXIS = T.axis;
   const metric = () => (METRICS[dash.params().metric] ? dash.params().metric : 'silent');
   const ci = (r) => { const v = CI[metric()] && r[CI[metric()]]; const a = typeof v === 'string' ? JSON.parse(v) : v; return Array.isArray(a) ? a.map(Number) : null; };
   document.querySelectorAll('.hb-metric').forEach((chip) => chip.addEventListener('click', () => {
@@ -84,7 +104,7 @@ const dash = (() => {
     if (g.status === 'error') {
       el.classList.remove('dash-skeleton');
       el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
-      el.textContent = 'Не удалось загрузить данные';
+      el.textContent = T.failed;
       return;
     }
     if (g.status !== 'ok') { el.classList.add('dash-skeleton'); el.textContent = '—'; return; }
@@ -98,7 +118,7 @@ const dash = (() => {
     const y = d3.scaleLog([Math.max(0.5, lo * 0.85), hi * 1.12], [H - m.bottom, m.top]).clamp(true);
     const yticks = [0.5, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 80].filter((v) => v >= y.domain()[0] && v <= y.domain()[1]);
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
-      .attr('aria-label', `Тихие ошибки на 100 имен против цены, ${split}`);
+      .attr('aria-label', T.aria(split));
     svg.append('g').selectAll('line').data(yticks).join('line')
       .attr('x1', m.left).attr('x2', W - m.right).attr('y1', y).attr('y2', y).style('stroke', 'var(--line)');
     const xticks = [0.03, 0.1, 0.3, 1, 3, 10, 30].filter((v) => v <= x.domain()[1]);
@@ -111,7 +131,7 @@ const dash = (() => {
       a.selectAll('line,path').style('stroke', 'var(--axis)');
     });
     svg.append('text').attr('x', W - m.right).attr('y', H - 6).attr('text-anchor', 'end')
-      .style('fill', 'var(--muted)').style('font-size', '13px').text('$ за 100 записей, пакетом');
+      .style('fill', 'var(--muted)').style('font-size', '13px').text(T.price);
     svg.append('text').attr('transform', `translate(14,${m.top}) rotate(-90)`).attr('text-anchor', 'end')
       .style('fill', 'var(--muted)').style('font-size', '13px').text(AXIS[metric()]);
     const families = d3.groups(rows, (r) => r.arm.replace(/-(none|off|low|medium|high|xhigh)$/, ''))
@@ -125,7 +145,7 @@ const dash = (() => {
       .attr('x1', (r) => x(r.usd)).attr('x2', (r) => x(r.usd)).attr('y1', (r) => y(r.lohi[0])).attr('y2', (r) => y(r.lohi[1]))
       .style('stroke', (r) => color(r.vendor)).style('stroke-width', 2).style('stroke-opacity', 0.3).style('stroke-linecap', 'round');
     svg.append('text').attr('x', m.left + 8).attr('y', H - m.bottom - 8)
-      .style('fill', 'var(--muted)').style('font-size', '13px').text('↙ лучше: дешевле и меньше ошибок');
+      .style('fill', 'var(--muted)').style('font-size', '13px').text(T.better);
     const tip = document.createElement('div');
     tip.className = 'hb-tip'; tip.hidden = true; el.append(tip);
     const pts = svg.append('g').selectAll('path').data([...rows].sort((a, b) => shown(a.arm) - shown(b.arm))).join('path')
@@ -165,13 +185,13 @@ const dash = (() => {
     pts.on('pointerenter', (ev, r) => {
       tip.replaceChildren();
       const head = document.createElement('div'); const b = document.createElement('b'); b.textContent = full(r.arm); head.append(b);
-      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${MAKER(r.vendor)} · ${r.records} записей` + (r.runs > 1 ? ` · среднее ${r.runs} прогонов` : '');
-      const iv = r.lohi ? `, интервал ${RU.format('.1f')(r.lohi[0])}-${RU.format('.1f')(r.lohi[1])}` : '';
+      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${MAKER(r.vendor)} · ${T.records(r.records)}` + (r.runs > 1 ? T.mean(r.runs) : '');
+      const iv = r.lohi ? `${T.interval}${RU.format('.1f')(r.lohi[0])}-${RU.format('.1f')(r.lohi[1])}` : '';
       const lr = document.createElement('div'); lr.textContent = `${RU.format('.2f')(r.silent)}: ${AXIS[metric()]}${iv}`;
-      const l0 = document.createElement('div'); l0.textContent = `${RU.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имен`;
-      const l1 = document.createElement('div'); l1.textContent = `${RU.format('.2f')(Number(r.silent_per_100))} тихих, ${RU.format('.2f')(Number(r.loud_per_100))} под вопросом`;
-      const l2 = document.createElement('div'); l2.textContent = `${RU.format('.1f')(Number(r.flagged_pct))} % полей под вопросом`;
-      const l3 = document.createElement('div'); l3.textContent = `${fmtUsd(r.usd)} за 100 записей`;
+      const l0 = document.createElement('div'); l0.textContent = `${RU.format('.2f')(Number(r.errors_per_100))}${T.all}`;
+      const l1 = document.createElement('div'); l1.textContent = `${RU.format('.2f')(Number(r.silent_per_100))}${T.silent}${RU.format('.2f')(Number(r.loud_per_100))}${T.flagged}`;
+      const l2 = document.createElement('div'); l2.textContent = `${RU.format('.1f')(Number(r.flagged_pct))}${T.pct}`;
+      const l3 = document.createElement('div'); l3.textContent = `${fmtUsd(r.usd)}${T.per}`;
       tip.append(head, sub, lr, l0, l1, l2, l3); tip.hidden = false;
       const px = x(r.usd) / W * el.clientWidth, py = y(r.silent) / H * el.clientHeight;
       const tw = tip.offsetWidth;
@@ -238,7 +258,7 @@ const dash = (() => {
       const tr = document.createElement('tr');
       tr.append(first, name, cell(level, false), cell(RU.format('.1f')(Number(r.silent_per_100)), true, r.silent_per_100),
         cell(RU.format('.1f')(Number(r.errors_per_100)), true, r.errors_per_100),
-        cell(RU.format('.1f')(Number(r.flagged_pct)) + ' %', true, r.flagged_pct),
+        cell(RU.format('.1f')(Number(r.flagged_pct)) + T.percent, true, r.flagged_pct),
         cell(RU.format('.2f')(Number(r.usd_per_100_batch)), true, r.usd_per_100_batch), cell(String(r.runs || 1), true, r.runs || 1));
       tbody.append(tr);
     }

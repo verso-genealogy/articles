@@ -86,12 +86,16 @@ main.text .hb-embed img { margin: 0 auto; }
 .share-menu > * { display: block; text-align: left; font: inherit; font-size: 15px; color: var(--fg); background: none; border: 0; border-radius: 6px; padding: 7px 10px; text-decoration: none; cursor: pointer; }
 .share-menu > :hover { background: var(--code); }
 /* The theme switch: light, dark, or as the system has it. */
-.theme { display: inline-flex; margin-left: auto; align-self: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px; gap: 2px; }
+.tools { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; align-self: center; }
+.lang { font-size: 13px; font-weight: 600; letter-spacing: .04em; color: var(--muted); text-decoration: none; border: 1px solid var(--line); border-radius: 999px; padding: 4px 10px; }
+.lang:hover { color: var(--fg); border-color: var(--axis); }
+.lang:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+.theme { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 2px; gap: 2px; }
 .theme button { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 26px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
 .theme button:hover { color: var(--fg); }
 .theme button[aria-pressed="true"] { background: var(--code); color: var(--fg); }
 .theme button:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
 .theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-@media (max-width: 640px) { .site-name { flex: 1; } .theme { order: 1; } .site-head nav { order: 2; width: 100%; } }
+@media (max-width: 640px) { .site-name { flex: 1; } .tools { order: 1; } .site-head nav { order: 2; width: 100%; } }
 .site-foot p { margin: 0 0 6px; }
 .site-foot p:last-child { margin: 0; }

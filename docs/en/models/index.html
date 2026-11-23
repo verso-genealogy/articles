@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting</title>
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">
+<link rel="alternate" hreflang="ru" href="https://verso-genealogy.github.io/articles/models/">
+<link rel="alternate" hreflang="en" href="https://verso-genealogy.github.io/articles/en/models/">
+<link rel="stylesheet" href="../../assets/site.css">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting">
+<meta property="og:description" content="This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.">
+<meta property="og:url" content="https://verso-genealogy.github.io/articles/en/models/">
+<meta property="og:site_name" content="How models read old documents">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://verso-genealogy.github.io/articles/img/en/cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:alt" content="A revision list of 1850: Nastasya is written twice, the models read Natalya">
+<meta property="article:published_time" content="2026-11-23">
+<meta name="description" content="This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.">
+<meta name="author" content="Dmitry Malchikov">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://verso-genealogy.github.io/articles/en/models/">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="../../assets/chart.css">
+</head>
+<body>
+<header class="site-head">
+  <a class="site-name" href="../../en/">How models read old documents</a>
+  <nav><a href="../../en/models/" aria-current="page">Which model to read with</a><a href="../../en/chart/">Chart and table</a><a href="https://github.com/verso-genealogy/verso">verso</a></nav>
+  <div class="tools"><a class="lang" href="../../models/" hreflang="ru" lang="ru" title="Русский" aria-label="Русский">RU</a><div class="theme" role="group" aria-label="Theme"><button type="button" data-theme="light" aria-pressed="false" title="Light theme" aria-label="Light theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" data-theme="dark" aria-pressed="false" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button><button type="button" data-theme="" aria-pressed="true" title="As the system" aria-label="Theme as the system has it"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button></div></div>
+</header>
+<main class="text">
+<article><h1>Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting</h1>
+<div class="byline"><a class="author" href="https://github.com/dmalch"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Dmitry Malchikov</a><time datetime="2026-11-23">23 November 2026</time><button type="button" class="share" aria-haspopup="menu" aria-expanded="false" data-url="https://verso-genealogy.github.io/articles/en/models/" data-title="Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting">Share</button></div>
+<figure><img alt="A revision list of 1850: Nastasya is written twice, the models read Natalya" src="../../img/en/cover.jpg" /></figure>
+<p>This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.</p>
+<h2>Why this matters</h2>
+<p>Ever since LLMs became widely available, people who do genealogy have been trying to use them to read old documents. The dream of a machine that quickly reads hundreds of pages written in a difficult hand and an unfamiliar orthography, and then analyses them, has always been tempting. Early models did this poorly: either there were too many errors, or the model did not understand the structure of the document. As the models and the ways of using them improved, they became usable for reading old manuscripts. In my experience, starting roughly with Gemini 3 Pro the recognition reached an acceptable level, and it became possible to build an LLM into the reading workflow.</p>
+<p>Today almost every leading model reads such documents and understands their structure. The question is no longer whether an LLM can be used to read parish registers, but which model to take and what it costs.</p>
+<div id="more"></div>
+
+<h2>How this measurement differs from others</h2>
+<p>There are already several comparisons of LLMs on historical manuscripts, but almost all of them are in English and other Western European languages, and they measure the character error rate (CER). Examples are the <a href="https://arxiv.org/abs/2411.03340">paper by Mark Humphries and colleagues</a>, his <a href="https://generativehistory.substack.com/p/gemini-3-solves-handwriting-recognition">blog</a> and the <a href="https://arxiv.org/abs/2503.15195">work by Crosilla and co-authors</a>. On Russian material there is a <a href="https://arxiv.org/abs/2510.06743">paper</a> on printed books of the 18th century and an <a href="https://habr.com/ru/companies/yandex/articles/1038044/">article by Yandex</a> (in Russian) about their own system for parish registers.</p>
+<p>I did not find an open comparison of general-purpose models on Russian parish registers (metric books) and revision lists (the tax censuses of the Russian Empire). I also needed a metric more detailed than CER: one that shows which errors in names the model itself flagged as doubtful and which it let through silently. For genealogy this is what matters, so I decided to measure everything myself.</p>
+<h2>What was measured and how</h2>
+<p>A few words about the method. I selected records from my own collection of documents: four parishes, five archives, the years 1788-1886. There are 167 records in total: 50 births, 35 marriages, 35 deaths and 47 households from revision lists and confession lists. They contain 993 people. Some of the records I once indexed by hand. The rest had already been read by Claude agents straight from the scans. Before the test I proofread all 167 against the scan to make sure the reference is correct.</p>
+<p>The quality of the images in the set varies a lot. About half of the set comes from the archives' online reading rooms, these are scans. The rest are photographs, some of them taken from a monitor screen, with moire.</p>
+<p>The model reads a cropped frame of one record. Together with the frame it gets a general instruction: write as in the source, in the pre-reform orthography, change only the grammatical case, do not guess what is illegible and put "?" instead, list doubtful fields separately, return the answer as JSON.</p>
+<p>Here is how it looks on one birth record of 1874. The frame the model receives:</p>
+<figure><img alt="An example frame: a birth record of 1874" src="../../img/example-crop.jpg" /></figure>
+<p>And the answer of Gemini 4 Carbon at low effort. I removed the empty fields and the place of residence to keep the example short:</p>
+<pre><code>{
+  &quot;record&quot;: {&quot;record_num&quot;: &quot;71&quot;, &quot;gender&quot;: &quot;male&quot;, &quot;b_day&quot;: &quot;17&quot;, &quot;k_day&quot;: &quot;18&quot;},
+  &quot;persons&quot;: [
+    {&quot;slot&quot;: &quot;child&quot;, &quot;name&quot;: &quot;Сергѣй&quot;},
+    {&quot;slot&quot;: &quot;father&quot;, &quot;name&quot;: &quot;Ананія&quot;, &quot;patronymic&quot;: &quot;Ефимовъ&quot;, &quot;status&quot;: &quot;крестьянин&quot;},
+    {&quot;slot&quot;: &quot;mother&quot;, &quot;name&quot;: &quot;Надежда&quot;, &quot;patronymic&quot;: &quot;Ѳокина&quot;, &quot;status&quot;: &quot;жена крестьянина&quot;},
+    {&quot;slot&quot;: &quot;godparent&quot;, &quot;name&quot;: &quot;Романъ&quot;, &quot;patronymic&quot;: &quot;Андрѣевъ&quot;, &quot;status&quot;: &quot;крестьянин&quot;},
+    {&quot;slot&quot;: &quot;godparent&quot;, &quot;name&quot;: &quot;Марѳа&quot;, &quot;patronymic&quot;: &quot;Иванова&quot;, &quot;status&quot;: &quot;крестьянская женка&quot;},
+    {&quot;slot&quot;: &quot;priest&quot;, &quot;name&quot;: &quot;Павелъ&quot;, &quot;surname&quot;: &quot;Орловъ&quot;, &quot;status&quot;: &quot;священник&quot;}
+  ],
+  &quot;doubtful&quot;: [&quot;persons[5].surname&quot;]
+}
+</code></pre>
+<p>The names in this record are read correctly. In the last line the model itself flagged one field as doubtful: the priest's surname.</p>
+<p>At the end a script scores the answer, there is no LLM judge. Running it again on the same answers gives the same numbers. The script compares what was read with the reference. Small differences in spelling are forgiven: <em>Сергѣевъ</em> and <em>Сергеев</em> (Sergeyev) count as the same reading, <em>Димитрій</em> and <em>Дмитрій</em> (Dimitry and Dmitry), <em>Дарья</em> and <em>Дарія</em> (Darya) count as variants of one name. A reading error is getting a different name.</p>
+<p>The following metrics are computed from the reading. Errors are counted per 100 name fields: given name, patronymic and surname. The set has about 1,700 such fields.</p>
+<ul>
+<li>Silent errors: a wrong name that the model did not flag. This is the main number. Such an error can only be found by proofreading everything by hand. For example, one of the models read the godmother in the record above as <em>Марія</em> (Maria), although the record says <em>Марфа</em> (Marfa), and did not mark any doubt.</li>
+<li>Flagged fields: the share of fields the model itself marked as doubtful. Every flag costs a person time to check, so a model that plays it safe and flags everything saves no work. For example, in the same record above the model doubted the priest's surname, although it read it correctly.</li>
+<li>All errors: wrong names, flagged or not.</li>
+<li>Price: what it costs to read 100 records.</li>
+</ul>
+<p>This test does not measure character-by-character recognition of the document. It measures only whether given names, patronymics and surnames are read correctly, and whether the model notices its own uncertain readings.</p>
+<p>I also computed the character error rate (CER), as other studies do, on the same answers, and it ranks the models almost identically. But it does not tell <em>could not read it and left "?"</em> from <em>read it wrong and said nothing</em>. CER also conveys the cost of an error poorly. More than a quarter of the wrong names differ from the right ones by one or two letters: <em>Марья</em> (Marya) and <em>Марѳа</em> (Marfa). In letters this is a trifle, but it is a different person.</p>
+<p>The confidence intervals are computed by resampling the records (bootstrap). The model reads the set once, and then 167 records are drawn at random with replacement from its finished answers many times, and the errors are recounted on each sample. The interval shows how much the result depends on the composition of the set. It does not account for the spread between runs of the same model, which I measured separately. On my set, with one run per configuration, a difference of about 2.5 errors per 100 names can be detected. Smaller differences were treated as noise.</p>
+<h2>Results: models and effort</h2>
+<p>So far I have tested 52 configurations. Below is the top of the table, sorted by silent errors. The full table is on a <a href="../chart/#table">separate page</a>.</p>
+<p>For the price I used the cheapest price available for each model (for example, through the batch API). The prices are those of November. From 1 December Google <a href="https://ai.google.dev/gemini-api/docs/pricing">doubles the prices</a> of Gemini 4 Argon and Carbon, and from 1 January of Gemini 3.8 Flash as well.</p>
+<div class="table-box"><table class="data"><thead><tr><th class="n">#</th><th>Model</th><th>effort</th><th class="n">Silent errors</th><th class="n">All errors</th><th class="n">Flagged fields</th><th class="n">$ per 100 records</th></tr></thead><tbody><tr><td class="n place" data-v="1">1</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Carbon</td><td>low</td><td class="n" data-v="3.6347517730496453">3.6</td><td class="n" data-v="10.72695035460993">10.7</td><td class="n" data-v="12.027186761229315">12.0%</td><td class="n" data-v="0.6038973053892216">0.60</td></tr><tr><td class="n place" data-v="2">2</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.2</td><td>high</td><td class="n" data-v="3.9691943127962084">4.0</td><td class="n" data-v="14.988151658767773">15.0</td><td class="n" data-v="22.482227488151658">22.5%</td><td class="n" data-v="3.9540788323353295">3.95</td></tr><tr><td class="n place" data-v="3">3</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Neon</td><td>medium</td><td class="n" data-v="4.125853368952211">4.1</td><td class="n" data-v="11.487088156723063">11.5</td><td class="n" data-v="13.208667260314634">13.2%</td><td class="n" data-v="4.749764371257484">4.75</td></tr><tr><td class="n place" data-v="4">4</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Carbon</td><td>medium</td><td class="n" data-v="5.023781212841855">5.0</td><td class="n" data-v="10.642092746730084">10.6</td><td class="n" data-v="9.780023781212842">9.8%</td><td class="n" data-v="3.6028697604790416">3.60</td></tr><tr><td class="n place" data-v="5">5</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Neon</td><td>low</td><td class="n" data-v="5.105372514099139">5.1</td><td class="n" data-v="11.457405758385278">11.5</td><td class="n" data-v="10.566933808251706">10.6%</td><td class="n" data-v="1.9426922155688622">1.94</td></tr><tr><td class="n place" data-v="6">6</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.2</td><td>medium</td><td class="n" data-v="5.312591722923393">5.3</td><td class="n" data-v="18.726152039917817">18.7</td><td class="n" data-v="25.917229233930144">25.9%</td><td class="n" data-v="2.2378284131736526">2.24</td></tr><tr><td class="n place" data-v="7">7</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Opus 5.5</td><td>xhigh</td><td class="n" data-v="5.7579318448883665">5.8</td><td class="n" data-v="19.095182138660398">19.1</td><td class="n" data-v="25.323149236192716">25.3%</td><td class="n" data-v="3.77239368263473">3.77</td></tr><tr><td class="n place" data-v="8">8</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.2</td><td>low</td><td class="n" data-v="5.915080527086384">5.9</td><td class="n" data-v="19.062957540263543">19.1</td><td class="n" data-v="25.06588579795022">25.1%</td><td class="n" data-v="2.219701137724551">2.22</td></tr><tr><td class="n place" data-v="9">9</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Argon</td><td>high</td><td class="n" data-v="6.17027588252744">6.2</td><td class="n" data-v="10.501334915455354">10.5</td><td class="n" data-v="6.911895579946603">6.9%</td><td class="n" data-v="3.069318263473054">3.07</td></tr><tr><td class="n place" data-v="10">10</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.1</td><td>low</td><td class="n" data-v="6.906643254316652">6.9</td><td class="n" data-v="20.719929762949956">20.7</td><td class="n" data-v="22.388059701492537">22.4%</td><td class="n" data-v="4.05630872005988">4.06</td></tr><tr><td class="n place" data-v="11">11</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Argon</td><td>medium</td><td class="n" data-v="6.932153392330384">6.9</td><td class="n" data-v="11.327433628318584">11.3</td><td class="n" data-v="5.545722713864307">5.5%</td><td class="n" data-v="0.6157204640718563">0.62</td></tr><tr><td class="n place" data-v="12">12</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Opus 5.5</td><td>high</td><td class="n" data-v="7.295010213014298">7.3</td><td class="n" data-v="21.38896994455792">21.4</td><td class="n" data-v="24.71549460169244">24.7%</td><td class="n" data-v="2.256097634730539">2.26</td></tr><tr><td class="n place" data-v="13">13</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.1</td><td>medium</td><td class="n" data-v="7.404155692127597">7.4</td><td class="n" data-v="19.637108574773194">19.6</td><td class="n" data-v="18.58355282411472">18.6%</td><td class="n" data-v="5.260262724550898">5.26</td></tr><tr><td class="n place" data-v="14">14</td><td><svg class="mark mark-claude" viewBox="-6 -6 12 12" role="img" aria-label="Anthropic"><title>Anthropic</title><circle r="5"/></svg>Claude Fable 5.1</td><td>high</td><td class="n" data-v="7.493388186893917">7.5</td><td class="n" data-v="19.365265941816045">19.4</td><td class="n" data-v="18.04290332059947">18.0%</td><td class="n" data-v="5.855117627245509">5.86</td></tr><tr><td class="n place" data-v="15">15</td><td><svg class="mark mark-google" viewBox="-6 -6 12 12" role="img" aria-label="Google"><title>Google</title><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/></svg>Gemini 4 Argon</td><td>low</td><td class="n" data-v="7.771563143950544">7.8</td><td class="n" data-v="12.187224021195172">12.2</td><td class="n" data-v="5.4459817486017075">5.4%</td><td class="n" data-v="0.5790092814371257">0.58</td></tr></tbody></table></div></div>
+<h2>What follows from all this?</h2>
+<p><strong>1. Three configurations read noticeably better than the rest.</strong> Gemini 4 Carbon at low, Claude Fable 5.2 at high and Gemini 4 Neon at medium leave 3.6-4.1 silent errors per 100 names. The next group leaves 5-8: Carbon medium, Neon low, Fable 5.2 low and medium, Opus 5.5 high and xhigh, Argon and Fable 5.1. Every configuration in the table was read twice, and the table shows the mean of the two runs. The three leaders hardly differ from one another.</p>
+<figure><img alt="Three configurations read noticeably better than the rest" src="../../img/en/leaders.png" /></figure>
+<p><strong>2. At the same quality the price differs eightfold.</strong> Carbon low costs $0.60 per 100 records. Fable 5.2 high costs $3.95, Neon medium $4.75. From December Carbon will cost $1.20, and the gap will shrink to three or four times.</p>
+<figure><img alt="At the same quality the price differs eightfold" src="../../img/en/leaders-price.png" /></figure>
+<p><strong>3. The leaders differ in the share of flagged fields.</strong> Argon flags 5-7% of the fields, Carbon and Neon 10-13%, Opus and Fable about a quarter. After Argon a person has the least to check. On the other hand, Argon medium leaves 3 more silent errors than Carbon low.</p>
+<figure><img alt="The leaders differ in the share of flagged fields" src="../../img/en/leaders-flagged.png" /></figure>
+<p><strong>4. Effort does not help every model.</strong></p>
+<ul>
+<li>With Opus 5.5 the quality grows with every level, but so does the price: from $1.18 to $3.77.</li>
+<li>With Fable 5.2, low and medium do not differ, and high is noticeably better than both.</li>
+<li>With GPT-6.2 Sol, high is not much better than medium.</li>
+<li>With Argon the difference between medium and high is within the noise, and high costs five times more.</li>
+<li>With Carbon, medium costs six times more and reads no better than low.</li>
+<li>With Neon, medium is a little better than low.</li>
+<li>GPT-6.1 Terra leaves the fewest silent errors with reasoning turned off, but then a third of the fields are flagged.</li>
+<li>With Sonnet effort changes little.</li>
+</ul>
+<figure><img alt="Effort does not help every model" src="../../img/en/effort-levels.png" /></figure>
+<p><strong>5. A new generation gives more than effort.</strong> The previous Opus 5, at the same price, leaves 6-9 more silent errors than Opus 5.5 at every effort level. Opus 5 at xhigh reads no better than Opus 5.5 at low: their difference is within the noise. The same holds for OpenAI. GPT-6.2 Sol, released in November, makes 8.9 silent errors at high against 16.9 for GPT-6.1 Sol, and costs half as much. And for Google: Gemini 3.1 Pro, the senior model of the previous generation, makes 20 silent errors at low, while Gemini 4 Argon and Carbon at the same level and for the same money make 8 and 4.</p>
+<figure><img alt="A new generation gives more than effort" src="../../img/en/generations.png" /></figure>
+<p><strong>6. Price does not predict quality.</strong></p>
+<ul>
+<li>Fable 5.1 costs 2-2.5 times more than Opus 5.5 high and reads the same.</li>
+<li>GPT-6.1 Sol makes 17 silent errors for $3.53.</li>
+<li>GPT-6.2 Astra medium at $3.24 reads no better than GPT-6.2 Sol medium at $0.94.</li>
+<li>Carbon medium at $3.60 makes 5.0 silent errors, Carbon low at $0.60 makes 3.6.</li>
+<li>Gemini 4 Hydrogen low at $0.79 makes 9 silent errors, two and a half times more than Carbon low at $0.60.</li>
+<li>Alibaba's flagship Qwen4 Max at high makes 21 silent errors, as many as Sonnet at low.</li>
+<li>Grok 4.7 makes 28. On the debug sample Grok was weak at every level, so I took only the cheapest one into the main run.</li>
+</ul>
+<div class="hb hb-embed">
+<div class="hb-filter" id="filter" role="group" aria-label="Models">
+    <span class="hb-filter-label">Models:</span>
+    <button type="button" class="hb-chip hb-model" data-model="" aria-pressed="true">All</button>
+    <button type="button" class="hb-chip hb-model" data-model="haiku" aria-pressed="false">Haiku 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="sonnet" aria-pressed="false">Sonnet 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus" aria-pressed="false">Opus 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus5" aria-pressed="false">Opus 5</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable" aria-pressed="false">Fable 5.1</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable52" aria-pressed="false">Fable 5.2</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.8-flash" aria-pressed="false">Gemini 3.8 Flash</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-argon" aria-pressed="false">Gemini 4 Argon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-carbon" aria-pressed="false">Gemini 4 Carbon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-neon" aria-pressed="false">Gemini 4 Neon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-hydrogen" aria-pressed="false">Gemini 4 Hydrogen</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.1-pro-preview" aria-pressed="false">Gemini 3.1 Pro</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-sol" aria-pressed="false">GPT 6.2 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-astra" aria-pressed="false">GPT 6.2 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-terra" aria-pressed="false">GPT 6.1 Terra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-sol" aria-pressed="false">GPT 6.1 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-astra" aria-pressed="false">GPT 6 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-luna" aria-pressed="false">GPT 6 Luna</button>
+    <button type="button" class="hb-chip hb-model" data-model="grok-4.7" aria-pressed="false">Grok 4.7</button>
+    <button type="button" class="hb-chip hb-model" data-model="qwen4-max" aria-pressed="false">Qwen4 Max</button>
+  </div>
+<div class="hb-filter" id="metric" role="group" aria-label="Measure">
+    <span class="hb-filter-label">Measure:</span>
+    <button type="button" class="hb-chip hb-metric" data-metric="silent" aria-pressed="true">Silent errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="all" aria-pressed="false">All errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="loud" aria-pressed="false">Flagged errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="review" aria-pressed="false">Proofreading cost</button>
+  </div>
+<div class="hb-card">
+<div class="hb-legend" id="legend-test" aria-label="Legend">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Anthropic</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>one model's effort levels</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95% interval</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>not selected in the filter</span>
+    </div>
+<div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
+</div>
+<p class="hb-note">Each point is a configuration: further right is more expensive, higher is more errors. Hover over a point to see the numbers,
+use the buttons to choose the models and the measure. All 52 configurations are here; the same chart with the debug sample
+and the table is <a href="../chart/">on a separate page</a>.</p>
+<noscript><img src="../../img/en/cost-vs-silent.png" alt="Price and silent errors: all configurations"></noscript>
+</div>
+<script src="../../assets/chart.js"></script>
+<p><strong>7. Small models are not fit for this task.</strong> Haiku makes 33-52 silent errors per 100 names, GPT-6 Luna 52-54. That is every second or third name.</p>
+<h2>Conclusion</h2>
+<p>What I would recommend for reading Russian manuscripts of the 19th century, based on my measurements:</p>
+<ul>
+<li>Take Gemini 4 Carbon at low. It leaves as few unnoticed errors as Fable 5.2 high and Neon medium, and those cost six to eight times more.</li>
+<li>If there should be fewer flags, take Argon medium.</li>
+<li>Among the Claude models take Fable 5.2 high or Opus 5.5 high. They flag four times as many fields as Argon and cost four to six times more.</li>
+<li>Do not pay for effort above low with Carbon or above medium with Argon: it will not get better.</li>
+<li>Do not use small models at all.</li>
+<li>Proofread in any case: the best configurations still leave 4-7 unnoticed errors per 100 names.</li>
+</ul>
+<p>The test runs on ready-made frames of a single record, so in real conditions the results may be lower or higher. The set I ran the tests on comes from my corpus. Its records are stored as code in a DSL, and all the tools for it are collected in the <a href="https://github.com/verso-genealogy/verso">verso</a> library. The records of five villages from this corpus are in open repositories: <a href="https://github.com/dmalch/kirillovo-records">Kirillovo</a>, <a href="https://github.com/dmalch/zhuravkino-records">Zhuravkino</a>, <a href="https://github.com/dmalch/dmitrievy-gory-records">Dmitrievy Gory</a>, <a href="https://github.com/dmalch/marino-records">Maryino</a> and <a href="https://github.com/dmalch/nizhnyaya-vereya-records">Nizhnyaya Vereya</a>.</p>
+<div class="byline byline-end"><button type="button" class="share" aria-haspopup="menu" aria-expanded="false" data-url="https://verso-genealogy.github.io/articles/en/models/" data-title="Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting">Share</button></div></article>
+<script src="../../assets/share.js"></script>
+</main>
+<footer class="site-foot"><p>The set comes from a corpus whose records are stored as code. The tools for it are collected in the <a href="https://github.com/verso-genealogy/verso">verso</a> library.</p><p>Text, charts and data: © Dmitry Malchikov, <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>. The frames of archival documents are not covered by the licence.</p></footer>
+<script src="../../assets/theme.js"></script>
+</body>
+</html>

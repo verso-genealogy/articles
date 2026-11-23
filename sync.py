@@ -27,6 +27,7 @@ def main(corpus: Path, bench: Path) -> None:
     img = corpus / "docs/articles/img"
     for name in CHARTS:
         shutil.copy(img / f"{name}.png", ROOT / "content/img" / f"{name}.png")
+        shutil.copy(img / "en" / f"{name}.png", ROOT / "content/img/en" / f"{name}.png")     # the same chart in English
     arms = json.loads((img / "arms.json").read_text(encoding="utf-8"))
     kept = {"records": arms["records"], "arms": arms["arms"], "twice": arms.get("twice", {})}
     (ROOT / "data/arms.json").write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")

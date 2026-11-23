@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chart: price and reading quality</title>
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">
+<link rel="alternate" hreflang="ru" href="https://verso-genealogy.github.io/articles/chart/">
+<link rel="alternate" hreflang="en" href="https://verso-genealogy.github.io/articles/en/chart/">
+<link rel="stylesheet" href="../../assets/site.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Chart: price and reading quality">
+<meta property="og:description" content="Price and reading errors for every LLM configuration: a chart with filters and the full table.">
+<meta property="og:url" content="https://verso-genealogy.github.io/articles/en/chart/">
+<meta property="og:site_name" content="How models read old documents">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://verso-genealogy.github.io/articles/img/en/cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:alt" content="A revision list of 1850: Nastasya is written twice, the models read Natalya">
+<meta name="description" content="Price and reading errors for every LLM configuration: a chart with filters and the full table.">
+<meta name="author" content="Dmitry Malchikov">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://verso-genealogy.github.io/articles/en/chart/">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="../../assets/chart.css">
+</head>
+<body>
+<header class="site-head">
+  <a class="site-name" href="../../en/">How models read old documents</a>
+  <nav><a href="../../en/models/">Which model to read with</a><a href="../../en/chart/" aria-current="page">Chart and table</a><a href="https://github.com/verso-genealogy/verso">verso</a></nav>
+  <div class="tools"><a class="lang" href="../../chart/" hreflang="ru" lang="ru" title="Русский" aria-label="Русский">RU</a><div class="theme" role="group" aria-label="Theme"><button type="button" data-theme="light" aria-pressed="false" title="Light theme" aria-label="Light theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" data-theme="dark" aria-pressed="false" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button><button type="button" data-theme="" aria-pressed="true" title="As the system" aria-label="Theme as the system has it"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button></div></div>
+</header>
+<main class="wide">
+<div class="hb">
+  <header class="hb-head">
+    <h1>Price and reading quality</h1>
+    <p>Each point is a configuration: a model at an effort level. The horizontal axis is the price of reading 100 records, the vertical axis is errors per 100 names, so the best configurations sit at the bottom left. The filters choose the models and the measure. What follows from these numbers is in the <a href="../models/">article</a>.</p>
+  </header>
+
+  <section class="hb-card hb-method" id="method">
+    <h2>How to read the chart</h2>
+    <div class="hb-cols">
+      <div>
+        <h3>What the chart shows</h3>
+        <p>Each point is a configuration: a model at an effort level. The horizontal axis is the price of reading 100 records through the batch API, the vertical axis is errors per 100 name fields: given name, patronymic and surname. Lower and further left is better. A line joins one model's effort levels.</p>
+        <p>Configurations read twice are shown as the mean of the two runs.</p>
+      </div>
+      <div>
+        <h3>Measures</h3>
+        <p>Silent errors: a wrong name that the model did not flag. This is the main number. All errors: wrong names, flagged or not. Flagged errors: wrong names that the model itself doubted.</p>
+        <p>Proofreading cost adds up silent errors and flags: a silent error counts as one, every flagged field as 0.3, whether it is right or wrong. It shows how much work is left for a person after the model.</p>
+      </div>
+      <div>
+        <h3>What counts as an error</h3>
+        <p>A script compares what was read with the reference, there is no LLM judge. Small differences in spelling are forgiven: <i>Сергѣевъ</i> and <i>Сергеев</i> count as the same reading, <i>Димитрій</i> and <i>Дмитрій</i> as variants of one name. An error is a different name, a missed field or an invented person.</p>
+      </div>
+      <div>
+        <h3>Intervals</h3>
+        <p>The bar at a point is the 95% confidence interval, computed by resampling the records. On 167 records a difference of about 2.5 errors per 100 names can be detected. If the bars of two points overlap, the points should not be treated as different.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="hb-filter" id="filter" role="group" aria-label="Models">
+    <span class="hb-filter-label">Models:</span>
+    <button type="button" class="hb-chip hb-model" data-model="" aria-pressed="true">All</button>
+    <button type="button" class="hb-chip hb-model" data-model="haiku" aria-pressed="false">Haiku 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="sonnet" aria-pressed="false">Sonnet 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus" aria-pressed="false">Opus 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus5" aria-pressed="false">Opus 5</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable" aria-pressed="false">Fable 5.1</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable52" aria-pressed="false">Fable 5.2</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.8-flash" aria-pressed="false">Gemini 3.8 Flash</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-argon" aria-pressed="false">Gemini 4 Argon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-carbon" aria-pressed="false">Gemini 4 Carbon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-neon" aria-pressed="false">Gemini 4 Neon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-hydrogen" aria-pressed="false">Gemini 4 Hydrogen</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.1-pro-preview" aria-pressed="false">Gemini 3.1 Pro</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-sol" aria-pressed="false">GPT 6.2 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-astra" aria-pressed="false">GPT 6.2 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-terra" aria-pressed="false">GPT 6.1 Terra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-sol" aria-pressed="false">GPT 6.1 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-astra" aria-pressed="false">GPT 6 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-luna" aria-pressed="false">GPT 6 Luna</button>
+    <button type="button" class="hb-chip hb-model" data-model="grok-4.7" aria-pressed="false">Grok 4.7</button>
+    <button type="button" class="hb-chip hb-model" data-model="qwen4-max" aria-pressed="false">Qwen4 Max</button>
+  </div>
+
+  <div class="hb-filter" id="metric" role="group" aria-label="Measure">
+    <span class="hb-filter-label">Measure:</span>
+    <button type="button" class="hb-chip hb-metric" data-metric="silent" aria-pressed="true">Silent errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="all" aria-pressed="false">All errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="loud" aria-pressed="false">Flagged errors</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="review" aria-pressed="false">Proofreading cost</button>
+  </div>
+
+  <section class="hb-card" id="test">
+    <h2>Main set: <span data-draw="n" data-source="results" data-field="records" data-where="split=test&amp;arm=opus-high">—</span> records</h2>
+    <p class="hb-note">The price is in dollars per 100 records, both scales are logarithmic. A model's name stands at its best point, the other points carry the effort level. Where a label did not fit, it is in the tooltip on hover.</p>
+    <div class="hb-legend" id="legend-test" aria-label="Legend">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Anthropic</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>one model's effort levels</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95% interval</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>not selected in the filter</span>
+    </div>
+    <div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
+  </section>
+
+  <section class="hb-card" id="dev">
+    <h2>Debug sample: <span data-draw="n" data-source="results" data-field="records" data-where="split=dev&amp;arm=opus-high">—</span> records</h2>
+    <p class="hb-note">On these 20 records I checked the settings before the main run. Some configurations here did not go into the main run: for example, Grok 4.7 at medium and above. Gemini 4 Carbon at high, Neon at high and xhigh and Hydrogen at xhigh are not shown: at these levels almost every answer was cut off at the length limit. On a small sample the numbers are noisier, so only points within this chart can be compared.</p>
+    <div class="hb-legend" id="legend-dev" aria-label="Legend">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Anthropic</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>one model's effort levels</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95% interval</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>not selected in the filter</span>
+    </div>
+    <div class="hb-chart dash-skeleton" data-draw="chart-dev" data-source="results"></div>
+  </section>
+
+  <section class="hb-card" id="table">
+    <h2>All configurations</h2>
+    <p class="hb-note">The main set, 167 records. The table follows the model filter. Errors per 100 name fields, price per 100 records. Where a configuration was read twice, the mean of the two runs is shown. A column header sorts the table.</p>
+    <div class="table-box">
+      <table class="data" data-source="results">
+        <thead><tr>
+          <th class="n">#</th><th>Model</th><th>effort</th><th class="n">Silent errors</th><th class="n">All errors</th>
+          <th class="n">Flagged fields</th><th class="n">$ per 100 records</th><th class="n">Runs</th>
+        </tr></thead>
+        <tbody data-draw="table"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script src="../../assets/chart.js"></script>
+</main>
+<footer class="site-foot"><p>The set comes from a corpus whose records are stored as code. The tools for it are collected in the <a href="https://github.com/verso-genealogy/verso">verso</a> library.</p><p>Text, charts and data: © Dmitry Malchikov, <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>. The frames of archival documents are not covered by the licence.</p></footer>
+<script src="../../assets/theme.js"></script>
+</body>
+</html>

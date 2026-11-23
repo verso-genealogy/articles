@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How models read old documents</title>
+<script>try{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="license" href="https://creativecommons.org/licenses/by/4.0/">
+<link rel="alternate" hreflang="ru" href="https://verso-genealogy.github.io/articles/">
+<link rel="alternate" hreflang="en" href="https://verso-genealogy.github.io/articles/en/">
+<link rel="stylesheet" href="../assets/site.css">
+<meta property="og:type" content="website">
+<meta property="og:title" content="How models read old documents">
+<meta property="og:description" content="This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.">
+<meta property="og:url" content="https://verso-genealogy.github.io/articles/en/">
+<meta property="og:site_name" content="How models read old documents">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="https://verso-genealogy.github.io/articles/img/en/cover.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="675">
+<meta property="og:image:alt" content="A revision list of 1850: Nastasya is written twice, the models read Natalya">
+<meta name="description" content="This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.">
+<meta name="author" content="Dmitry Malchikov">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://verso-genealogy.github.io/articles/en/">
+</head>
+<body>
+<header class="site-head">
+  <a class="site-name" href="../en/">How models read old documents</a>
+  <nav><a href="../en/models/">Which model to read with</a><a href="../en/chart/">Chart and table</a><a href="https://github.com/verso-genealogy/verso">verso</a></nav>
+  <div class="tools"><a class="lang" href="../" hreflang="ru" lang="ru" title="Русский" aria-label="Русский">RU</a><div class="theme" role="group" aria-label="Theme"><button type="button" data-theme="light" aria-pressed="false" title="Light theme" aria-label="Light theme"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button><button type="button" data-theme="dark" aria-pressed="false" title="Dark theme" aria-label="Dark theme"><svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button><button type="button" data-theme="" aria-pressed="true" title="As the system" aria-label="Theme as the system has it"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button></div></div>
+</header>
+<main class="text">
+<article>
+<h1><a class="title" href="models/">Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting</a></h1>
+<div class="byline"><a class="author" href="https://github.com/dmalch"><svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>Dmitry Malchikov</a><time datetime="2026-11-23">23 November 2026</time><button type="button" class="share" aria-haspopup="menu" aria-expanded="false" data-url="https://verso-genealogy.github.io/articles/en/models/" data-title="Which model reads old Russian records best: a test of LLM configurations on 18th-19th century handwriting">Share</button></div>
+<figure><img alt="A revision list of 1850: Nastasya is written twice, the models read Natalya" src="../img/en/cover.jpg" /></figure>
+<p>This article answers one question: which LLM reads old Russian handwritten documents best. I measured how the leading models perform on a specially selected set of records and compared them by the number of reading errors and by cost. The best result came from Gemini 4 Carbon at low effort: it leaves as few unnoticed reading errors as Claude Fable 5.2 and Gemini 4 Neon, and costs six to eight times less.</p>
+<h2>Why this matters</h2>
+<p>Ever since LLMs became widely available, people who do genealogy have been trying to use them to read old documents. The dream of a machine that quickly reads hundreds of pages written in a difficult hand and an unfamiliar orthography, and then analyses them, has always been tempting. Early models did this poorly: either there were too many errors, or the model did not understand the structure of the document. As the models and the ways of using them improved, they became usable for reading old manuscripts. In my experience, starting roughly with Gemini 3 Pro the recognition reached an acceptable level, and it became possible to build an LLM into the reading workflow.</p>
+<p>Today almost every leading model reads such documents and understands their structure. The question is no longer whether an LLM can be used to read parish registers, but which model to take and what it costs.</p>
+<p><a class="more" href="models/#more">Read more</a></p>
+</article>
+<script src="../assets/share.js"></script>
+</main>
+<footer class="site-foot"><p>The set comes from a corpus whose records are stored as code. The tools for it are collected in the <a href="https://github.com/verso-genealogy/verso">verso</a> library.</p><p>Text, charts and data: © Dmitry Malchikov, <a href="https://creativecommons.org/licenses/by/4.0/" rel="license">CC BY 4.0</a>. The frames of archival documents are not covered by the licence.</p></footer>
+<script src="../assets/theme.js"></script>
+</body>
+</html>
