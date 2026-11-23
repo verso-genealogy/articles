@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Диаграмма: цена и качество чтения</title>
+<link rel="stylesheet" href="../assets/site.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<link rel="stylesheet" href="../assets/chart.css">
+</head>
+<body>
+<header class="site-head">
+  <a class="site-name" href="../">Чтение старинных документов моделями</a>
+  <nav><a href="../models/">Какой моделью читать</a><a href="../chart/" aria-current="page">Диаграмма</a><a href="../table/">Все конфигурации</a><a href="https://github.com/verso-genealogy/verso">verso</a></nav>
+</header>
+<main class="wide">
+<div class="hb">
+  <header class="hb-head">
+    <h1>Цена и качество чтения</h1>
+    <p>Каждая точка это конфигурация: модель и уровень effort. По горизонтали цена чтения 100 записей, по вертикали ошибки на 100 имен, так что лучшие конфигурации стоят слева вверху. Фильтры выбирают модели и меру. Выводы из этих чисел в <a href="../models/">статье</a>.</p>
+  </header>
+
+  <section class="hb-card hb-method" id="method">
+    <h2>Как измеряли</h2>
+    <div class="hb-cols">
+      <div>
+        <h3>Записи и эталон</h3>
+        <p>Записи взяты из корпуса: рождения, браки и смерти из метрических книг и дворы ревизских сказок, из разных архивов и полувека. Эталон — то, что стоит в DSL после вычитки владельцем по скану. Его черновики писали агенты Claude, поэтому отчёт отдельно сравнивает записи, где вычитка исправила имя, и записи, где подтвердила. Поля, которые владелец не смог решить, сняты с оценки.</p>
+        <p>Записи поделены один раз: маленькая выборка dev — для отладки и отсева, большая test — для выводов. Цифры двух графиков между собой не сравниваются.</p>
+      </div>
+      <div>
+        <h3>Задание</h3>
+        <p>Каждая конфигурация (модель и уровень effort) получает одно и то же: кропы именных граф листа, карточку записи (село, год, тип книги) и закрытую JSON-схему ответа. В ответе модель может перечислить сомнительные поля — так же, как человек ставит «?» при вычитке.</p>
+        <p>Модели Anthropic: Claude Haiku 5.5, Sonnet 5.5, Opus 5.5, Fable 5.1 и Fable 5.2; для сравнения — прежний Opus 5.</p>
+        <p>Claude читал через Message Batches, Gemini, OpenAI и xAI (Grok) — обычными запросами и пакетами, Qwen (Alibaba) — через OpenRouter, без пакетов. Цена везде пакетная, по прайсу производителя; у xAI пакет на 20 % дешевле обычного запроса, у остальных — вдвое.</p>
+      </div>
+      <div>
+        <h3>Оценка</h3>
+        <p>Каждое имя, отчество и фамилия эталона сравниваются с прочитанным. Не ошибка — другое написание (ѣ и е, ъ на конце, в и ѳ) и вариант того же имени по таблице имён корпуса (Егоръ и Георгій). Ошибка — неверно прочитанное, пропущенное поле, выдуманный человек, а также имя, отчество или фамилия там, где в записи их нет. Исключение — отчество, которое выводит сам DSL: ревизия пишет «его сынъ Иванъ», и сыну достаётся отчество отца. Дописанное верно — не ошибка, неверно — выдумка.</p>
+        <p>Члены двора, которых нет на кропах (двор продолжается на лист, не попавший в окна), из эталона убраны: их не мог прочесть никто. Строка двора с верно прочитанным именем, но ошибкой в возрасте или номере засчитывается как ошибки этих полей, а не как пропуск и выдумка.</p>
+        <p>Тихая ошибка — ошибка в поле, которое модель не пометила как сомнительное; помеченная — в поле, которое пометила. Вместе это все ошибки. Переключатель над графиками выбирает, какие из них откладывать по вертикали, на сто полей с именами.</p>
+      </div>
+      <div>
+        <h3>Почему тихие</h3>
+        <p>Чтение модели — черновик для вычитки. Помеченную ошибку человек увидит: глянет на кроп и поправит, это стоит секунды. Непомеченная проходит мимо вычитки в DSL, а оттуда на Geni и в сводку профилей, где неверное имя склеивает чужих людей или разводит одного. Поэтому важна не общая точность, а то, сколько ошибок модель пропускает молча.</p>
+        <p>Но пометка не бесплатна: модель, пометившая всё подряд, не имела бы ни одной тихой ошибки, а вычитка стала бы перечитыванием. Поэтому основная мера — цена вычитки: тихие ошибки плюс 0,3 за каждое помеченное поле, верное или нет. Пометка дороже верного чтения и дешевле тихой ошибки: три взгляда на скан стоят одного неверного человека на Geni, и ответ из одних «?» хуже любого полезного читателя.</p>
+      </div>
+      <div>
+        <h3>Точность</h3>
+        <p>Отрезок у точки — 95-процентный интервал: записи test пересэмплированы бутстрепом. Ошибки сидят кучно (несколько трудных дворов дают треть всех ошибок), поэтому интервал шире, чем если считать поля независимыми. На 167 записях различима разница около 2,5 ошибки на 100 имён; перекрывающиеся отрезки — не разница. Dev — 20 записей: годится для отсева явно слабых конфигураций, не для выбора между сильными.</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="hb-filter" id="filter" role="group" aria-label="Модели">
+    <span class="hb-filter-label">Модели:</span>
+    <button type="button" class="hb-chip hb-model" data-model="" aria-pressed="true">Все</button>
+    <button type="button" class="hb-chip hb-model" data-model="haiku" aria-pressed="false">Haiku 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="sonnet" aria-pressed="false">Sonnet 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus" aria-pressed="false">Opus 5.5</button>
+    <button type="button" class="hb-chip hb-model" data-model="opus5" aria-pressed="false">Opus 5</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable" aria-pressed="false">Fable 5.1</button>
+    <button type="button" class="hb-chip hb-model" data-model="fable52" aria-pressed="false">Fable 5.2</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.8-flash" aria-pressed="false">Gemini 3.8 Flash</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-argon" aria-pressed="false">Gemini 4 Argon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-carbon" aria-pressed="false">Gemini 4 Carbon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-neon" aria-pressed="false">Gemini 4 Neon</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-4-hydrogen" aria-pressed="false">Gemini 4 Hydrogen</button>
+    <button type="button" class="hb-chip hb-model" data-model="gemini-3.1-pro-preview" aria-pressed="false">Gemini 3.1 Pro</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-sol" aria-pressed="false">GPT 6.2 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.2-astra" aria-pressed="false">GPT 6.2 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-terra" aria-pressed="false">GPT 6.1 Terra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6.1-sol" aria-pressed="false">GPT 6.1 Sol</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-astra" aria-pressed="false">GPT 6 Astra</button>
+    <button type="button" class="hb-chip hb-model" data-model="gpt-6-luna" aria-pressed="false">GPT 6 Luna</button>
+    <button type="button" class="hb-chip hb-model" data-model="grok-4.7" aria-pressed="false">Grok 4.7</button>
+    <button type="button" class="hb-chip hb-model" data-model="qwen4-max" aria-pressed="false">Qwen4 Max</button>
+  </div>
+
+  <div class="hb-filter" id="metric" role="group" aria-label="Какие ошибки">
+    <span class="hb-filter-label">Мера:</span>
+    <button type="button" class="hb-chip hb-metric" data-metric="silent" aria-pressed="true">Тихие ошибки</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="all" aria-pressed="false">Все ошибки</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="loud" aria-pressed="false">Помеченные</button>
+    <button type="button" class="hb-chip hb-metric" data-metric="review" aria-pressed="false">Цена вычитки</button>
+  </div>
+
+  <section class="hb-card" id="test">
+    <h2>Test — <span data-draw="n" data-source="results" data-field="records" data-where="split=test&amp;arm=opus-high">—</span> записей</h2>
+    <p class="hb-note">Выше — лучше по выбранной мере на 100 имён, отрезок — 95-процентный интервал; правее — дороже. Цена пакетом, $ за 100 записей, шкала логарифмическая. Линия соединяет уровни effort одной модели; имя модели стоит у её лучшей точки, у остальных — уровень effort. Подпись, которой не нашлось места, есть в подсказке при наведении.</p>
+    <div class="hb-legend" id="legend-test" aria-label="Обозначения">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Claude</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>уровни effort одной модели</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95-процентный интервал</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>не выбрана в фильтре</span>
+    </div>
+    <div class="hb-chart dash-skeleton" data-draw="chart-test" data-source="results"></div>
+  </section>
+
+  <section class="hb-card" id="dev">
+    <h2>Dev — <span data-draw="n" data-source="results" data-field="records" data-where="split=dev&amp;arm=opus-high">—</span> записей</h2>
+    <p class="hb-note">Здесь же OpenAI, Gemini 3.1 Pro и три уровня Grok 4.7, которые на test не гонялись, и все уровни Fable 5.2. На маленькой выборке цифры шумнее и ниже, чем на test: сравнивать точки внутри одного графика, не между графиками.</p>
+    <div class="hb-legend" id="legend-dev" aria-label="Обозначения">
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--hb-c0)"></circle></svg>Claude</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L5.5,4.5L-5.5,4.5Z" style="fill: var(--hb-c1)"></path></svg>Google</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><rect x="-4.5" y="-4.5" width="9" height="9" style="fill: var(--hb-c2)"></rect></svg>OpenAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z" style="fill: var(--hb-c3)"></path></svg>xAI</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z" style="fill: var(--hb-c4)"></path></svg>Alibaba</span>
+      <span><svg class="hb-wide" viewBox="0 0 18 12" aria-hidden="true"><path d="M1,9L9,4L17,6" style="fill: none; stroke: var(--muted); stroke-width: 1.5; stroke-linecap: round"></path></svg>уровни effort одной модели</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><line x1="0" x2="0" y1="-5" y2="5" style="stroke: var(--muted); stroke-width: 2; stroke-opacity: .5; stroke-linecap: round"></line></svg>95-процентный интервал</span>
+      <span><svg viewBox="-6 -6 12 12" aria-hidden="true"><circle r="5" style="fill: var(--axis); opacity: .45"></circle></svg>не выбрана в фильтре</span>
+    </div>
+    <div class="hb-chart dash-skeleton" data-draw="chart-dev" data-source="results"></div>
+  </section>
+
+  <section class="hb-card" id="table">
+    <h2>Все конфигурации и выборки</h2>
+    <p class="hb-note">Цена вычитки — тихие ошибки плюс 0,3 за каждое помеченное поле, на 100 имён. Тихая ошибка — неверно прочитанное имя, отчество или фамилия, не помеченные моделью как сомнительные. Помечено — доля полей с именами, где модель сама выразила сомнение.</p>
+    <div class="hb-table-box">
+      <table class="hb-table" data-source="results" data-row-key="split,arm">
+        <thead><tr>
+          <th data-field="split">выборка</th>
+          <th data-field="arm">конфигурация</th>
+          <th data-field="vendor">производитель</th>
+          <th data-field="records" class="n">записей</th>
+          <th data-field="review_per_100" class="n">цена вычитки на 100 имён</th>
+          <th data-field="errors_per_100" class="n">всех ошибок</th>
+          <th data-field="silent_per_100" class="n">тихих</th>
+          <th data-field="loud_per_100" class="n">помеченных</th>
+          <th data-field="flagged_pct" class="n">% помечено</th>
+          <th data-field="usd_per_100_batch" class="n">$ на 100 записей</th>
+        </tr></thead>
+        <tbody data-draw="table"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script src="../assets/chart.js"></script>
+</main>
+<footer class="site-foot">Набор взят из корпуса, записи которого хранятся как код. Инструменты для него собраны в библиотеке <a href="https://github.com/verso-genealogy/verso">verso</a>.</footer>
+</body>
+</html>
