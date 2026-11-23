@@ -21,7 +21,18 @@ OUT = ROOT / "docs"
 SITE = "Чтение старинных документов моделями"
 NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма"), ("table/", "Все конфигурации"))
 REPO = "https://github.com/verso-genealogy/verso"
-HEAD = ("Модель", "effort", "Тихих ошибок", "Всех ошибок", "Полей под вопросом", "$ за 100 записей", "Прогонов")
+HEAD = ("№", "Модель", "effort", "Тихих ошибок", "Всех ошибок", "Полей под вопросом", "$ за 100 записей", "Прогонов")
+#: A vendor by the start of a run's name, and its mark: the shape and the colour the chart draws it with.
+VENDORS = (("gemini", "google"), ("gpt", "openai"), ("grok", "xai"), ("qwen", "alibaba"))
+MARKS = {"claude": '<circle r="5"/>', "google": '<path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/>', "openai": '<rect x="-4.5" y="-4.5" width="9" height="9"/>',
+         "xai": '<path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z"/>', "alibaba": '<path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z"/>'}
+VENDOR_NAMES = {"claude": "Anthropic", "google": "Google", "openai": "OpenAI", "xai": "xAI", "alibaba": "Alibaba"}
+
+
+def mark(run: str) -> str:
+    vendor = next((name for prefix, name in VENDORS if run.startswith(prefix)), "claude")
+    return (f'<svg class="mark mark-{vendor}" viewBox="-6 -6 12 12" role="img" aria-label="{VENDOR_NAMES[vendor]}">'
+            f"<title>{VENDOR_NAMES[vendor]}</title>{MARKS[vendor]}</svg>")
 
 
 def ru(value: float, digits: int = 1) -> str:
@@ -64,20 +75,27 @@ def configurations() -> list[dict]:
         model, _, effort = run.removesuffix("-ultrahigh").rpartition("-")
         pooled = data.get("twice", {}).get(run)
         rates = pooled or arm
-        out.append({"run": run, "model": names.get(model, model) + (", кадры в высоком разрешении" if media else ""),
+        out.append({"run": run, "variant": media,
+                    "model": names.get(model, model) + (", кадры в высоком разрешении" if media else ""),
                     "effort": "без рассуждений" if effort in ("none", "off") else effort,
                     "silent": rates["silent"], "all": rates["all"], "flagged": rates["flagged"], "cost": rates["cost"],
                     "runs": int(pooled["runs"]) if pooled else 1})
-    return sorted(out, key=lambda a: a["silent"])
+    out.sort(key=lambda a: a["silent"])
+    place = 0
+    for a in out:                      # the place among models at a level; a variant of one stands beside them, unnumbered
+        place += not a["variant"]
+        a["place"] = None if a["variant"] else place
+    return out
 
 
 def table(rows: list[dict], *, ident: str = "") -> str:
     """The rows as a table; the count of runs is a column only where it differs between the rows."""
     runs = len({a["runs"] for a in rows}) > 1
-    head = "".join(f"<th{' class=\"n\"' if n > 1 else ''}>{html.escape(h)}</th>"
+    head = "".join(f"<th{' class=\"n\"' if n == 0 or n > 2 else ''}>{html.escape(h)}</th>"
                    for n, h in enumerate(HEAD if runs else HEAD[:-1]))
     body = "".join(
-        "<tr>" + f"<td>{html.escape(a['model'])}</td><td>{html.escape(a['effort'])}</td>"
+        "<tr>" + f'<td class="n place" data-v="{a["place"] or 999}">{a["place"] or "–"}</td>'
+        + f"<td>{mark(a['run'])}{html.escape(a['model'])}</td><td>{html.escape(a['effort'])}</td>"
         + "".join(f'<td class="n" data-v="{v}">{text}</td>' for v, text in (
             (a["silent"], ru(a["silent"])), (a["all"], ru(a["all"])), (a["flagged"], ru(a["flagged"]) + " %"),
             (a["cost"], ru(a["cost"], 2)), *([(a["runs"], str(a["runs"]))] if runs else []))) + "</tr>"

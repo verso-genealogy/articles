@@ -28,11 +28,13 @@
   "gemini-4-neon-low",
   "fable52-medium",
   "opus-xhigh",
+  "fable52-low",
   "gemini-4-argon-high",
-  "gemini-4-argon-medium",
   "fable-low",
-  "gemini-4-argon-low",
+  "gemini-4-argon-medium",
   "opus-high",
-  "fable-high"
+  "fable-medium",
+  "fable-high",
+  "gemini-4-argon-low"
  ]
 }

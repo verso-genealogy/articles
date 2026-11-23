@@ -36,6 +36,15 @@ const dash = (() => {
     'gemini-3.1-pro-preview-high', 'gpt-6.1-terra-high', 'gpt-6.1-sol-high', 'gpt-6-astra-high',
     'fable52-low', 'fable52-high', 'grok-4.7-high']);
   const VERSION = {haiku: '5.5', sonnet: '5.5', opus: '5.5', opus5: '5', fable: '5.1', fable52: '5.2'};
+  // A configuration as the article names it: «Gemini 4 Carbon, low».
+  const MODELS = {"gemini-4-argon": "Gemini 4 Argon", "gemini-4-neon": "Gemini 4 Neon", "gemini-4-carbon": "Gemini 4 Carbon", "gemini-4-hydrogen": "Gemini 4 Hydrogen", "fable52": "Claude Fable 5.2", "opus": "Claude Opus 5.5", "opus5": "Claude Opus 5", "fable": "Claude Fable 5.1", "gpt-6.2-sol": "GPT-6.2 Sol", "gpt-6.2-astra": "GPT-6.2 Astra", "gpt-6.1-terra": "GPT-6.1 Terra", "gemini-3.8-flash": "Gemini 3.8 Flash", "sonnet": "Claude Sonnet 5.5", "gpt-6.1-sol": "GPT-6.1 Sol", "qwen4-max": "Qwen4 Max", "grok-4.7": "Grok 4.7", "haiku": "Claude Haiku 5.5", "gpt-6-luna": "GPT-6 Luna", "gemini-3.1-pro-preview": "Gemini 3.1 Pro (preview)"};
+  const LEVEL = /-(none|off|low|medium|high|xhigh)$/;
+  const full = (arm) => { const base = arm.replace(/-ultrahigh$/, ''); const level = (base.match(LEVEL) || [])[1];
+    const model = MODELS[base.replace(LEVEL, '')] || base.replace(LEVEL, '');
+    return `${model}, ${level === 'none' || level === 'off' ? 'без рассуждений' : level}` + (arm.endsWith('-ultrahigh') ? ', кадры в высоком разрешении' : ''); };
+  const RU = d3.formatLocale({decimal: ',', thousands: '\u00a0', grouping: [3], currency: ['$', '']});
+  const SPLIT = {test: 'основной', dev: 'отладочный'};
+  const MAKER = (vendor) => (vendor === 'Claude' ? 'Anthropic' : vendor);
   const named = (arm) => arm.replace(/^(haiku|sonnet|opus5|opus|fable52|fable)(?=-|$)/, (f) => `${f.replace(/\d+$/, '')}-${VERSION[f]}`);
   const short = (arm) => named(arm).replace('gemini-', '').replace('gpt-', '').replace('-preview', '');
   const color = (vendor) => `var(--hb-c${VENDORS.indexOf(vendor)})`;
@@ -44,7 +53,7 @@ const dash = (() => {
   const shown = (arm) => { const p = picked(); return p.length === 0 || p.includes(family(arm)); };
   const METRICS = {review: 'review_per_100', silent: 'silent_per_100', loud: 'loud_per_100', all: 'errors_per_100'};
   const CI = {review: 'review_ci', silent: 'silent_ci', all: 'errors_ci'};
-  const AXIS = {review: 'цена вычитки на 100 имён', silent: 'тихих ошибок на 100 имён', loud: 'ошибок под вопросом на 100 имён', all: 'всех ошибок на 100 имён'};
+  const AXIS = {review: 'цена вычитки на 100 имен', silent: 'тихих ошибок на 100 имен', loud: 'ошибок под вопросом на 100 имен', all: 'всех ошибок на 100 имен'};
   const metric = () => (METRICS[dash.params().metric] ? dash.params().metric : 'silent');
   const ci = (r) => { const v = CI[metric()] && r[CI[metric()]]; const a = typeof v === 'string' ? JSON.parse(v) : v; return Array.isArray(a) ? a.map(Number) : null; };
   document.querySelectorAll('.hb-metric').forEach((chip) => chip.addEventListener('click', () => {
@@ -66,7 +75,7 @@ const dash = (() => {
       chip.setAttribute('aria-pressed', String(m ? p.includes(m) : p.length === 0));
     });
   });
-  const fmtUsd = (v) => '$' + (v < 0.1 ? d3.format('.3f')(v) : v < 10 ? d3.format('.2f')(v) : d3.format('.1f')(v));
+  const fmtUsd = (v) => '$' + (v < 0.1 ? RU.format('.3f')(v) : v < 10 ? RU.format('.2f')(v) : RU.format('.1f')(v));
 
   function scatter(el, split) {
     const g = dash.data('results');
@@ -74,7 +83,7 @@ const dash = (() => {
     if (g.status === 'error') {
       el.classList.remove('dash-skeleton');
       el.style.display = 'flex'; el.style.alignItems = 'center'; el.style.justifyContent = 'center';
-      el.textContent = 'Failed to load';
+      el.textContent = 'Не удалось загрузить данные';
       return;
     }
     if (g.status !== 'ok') { el.classList.add('dash-skeleton'); el.textContent = '—'; return; }
@@ -88,13 +97,13 @@ const dash = (() => {
     const y = d3.scaleLog([Math.max(0.5, lo * 0.85), hi * 1.12], [H - m.bottom, m.top]).clamp(true);
     const yticks = [0.5, 1, 2, 3, 4, 6, 8, 10, 15, 20, 30, 50, 80].filter((v) => v >= y.domain()[0] && v <= y.domain()[1]);
     const svg = d3.select(el).append('svg').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`).attr('role', 'img')
-      .attr('aria-label', `Тихие ошибки на 100 имён против цены, ${split}`);
+      .attr('aria-label', `Тихие ошибки на 100 имен против цены, ${split}`);
     svg.append('g').selectAll('line').data(yticks).join('line')
       .attr('x1', m.left).attr('x2', W - m.right).attr('y1', y).attr('y2', y).style('stroke', 'var(--line)');
     const xticks = [0.03, 0.1, 0.3, 1, 3, 10, 30].filter((v) => v <= x.domain()[1]);
     const ax = svg.append('g').attr('transform', `translate(0,${H - m.bottom})`)
-      .call(d3.axisBottom(x).tickValues(xticks).tickFormat((v) => '$' + v).tickSizeOuter(0));
-    const ay = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yticks).tickFormat(d3.format('~g')).tickSizeOuter(0));
+      .call(d3.axisBottom(x).tickValues(xticks).tickFormat((v) => '$' + RU.format('~g')(v)).tickSizeOuter(0));
+    const ay = svg.append('g').attr('transform', `translate(${m.left},0)`).call(d3.axisLeft(y).tickValues(yticks).tickFormat(RU.format('~g')).tickSizeOuter(0));
     [ax, ay].forEach((a) => {
       a.attr('font-size', null).attr('font-family', null);
       a.selectAll('text').style('fill', 'var(--muted)').style('font-size', '13px');
@@ -154,13 +163,13 @@ const dash = (() => {
     }
     pts.on('pointerenter', (ev, r) => {
       tip.replaceChildren();
-      const head = document.createElement('div'); const b = document.createElement('b'); b.textContent = named(r.arm); head.append(b);
-      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${r.vendor} · ${r.records} записей` + (r.runs > 1 ? ` · среднее ${r.runs} прогонов` : '');
-      const iv = r.lohi ? `, интервал ${d3.format('.1f')(r.lohi[0])}–${d3.format('.1f')(r.lohi[1])}` : '';
-      const lr = document.createElement('div'); lr.textContent = `${d3.format('.2f')(r.silent)} — ${AXIS[metric()]}${iv}`;
-      const l0 = document.createElement('div'); l0.textContent = `${d3.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имён`;
-      const l1 = document.createElement('div'); l1.textContent = `${d3.format('.2f')(Number(r.silent_per_100))} тихих, ${d3.format('.2f')(Number(r.loud_per_100))} под вопросом`;
-      const l2 = document.createElement('div'); l2.textContent = `${d3.format('.1f')(Number(r.flagged_pct))} % полей под вопросом`;
+      const head = document.createElement('div'); const b = document.createElement('b'); b.textContent = full(r.arm); head.append(b);
+      const sub = document.createElement('div'); sub.className = 'hb-sub'; sub.textContent = `${MAKER(r.vendor)} · ${r.records} записей` + (r.runs > 1 ? ` · среднее ${r.runs} прогонов` : '');
+      const iv = r.lohi ? `, интервал ${RU.format('.1f')(r.lohi[0])}-${RU.format('.1f')(r.lohi[1])}` : '';
+      const lr = document.createElement('div'); lr.textContent = `${RU.format('.2f')(r.silent)}: ${AXIS[metric()]}${iv}`;
+      const l0 = document.createElement('div'); l0.textContent = `${RU.format('.2f')(Number(r.errors_per_100))} всех ошибок на 100 имен`;
+      const l1 = document.createElement('div'); l1.textContent = `${RU.format('.2f')(Number(r.silent_per_100))} тихих, ${RU.format('.2f')(Number(r.loud_per_100))} под вопросом`;
+      const l2 = document.createElement('div'); l2.textContent = `${RU.format('.1f')(Number(r.flagged_pct))} % полей под вопросом`;
       const l3 = document.createElement('div'); l3.textContent = `${fmtUsd(r.usd)} за 100 записей`;
       tip.append(head, sub, lr, l0, l1, l2, l3); tip.hidden = false;
       const px = x(r.usd) / W * el.clientWidth, py = y(r.silent) / H * el.clientHeight;
@@ -192,11 +201,11 @@ const dash = (() => {
       for (const c of cols) {
         const td = document.createElement('td');
         const v = r[c];
-        if (c === 'review_per_100' || c === 'silent_per_100' || c === 'loud_per_100' || c === 'errors_per_100') { td.className = 'n'; td.textContent = d3.format('.2f')(Number(v)); }
-        else if (c === 'flagged_pct') { td.className = 'n'; td.textContent = d3.format('.1f')(Number(v)); }
+        if (c === 'review_per_100' || c === 'silent_per_100' || c === 'loud_per_100' || c === 'errors_per_100') { td.className = 'n'; td.textContent = RU.format('.2f')(Number(v)); }
+        else if (c === 'flagged_pct') { td.className = 'n'; td.textContent = RU.format('.1f')(Number(v)); }
         else if (c === 'usd_per_100_batch') { td.className = 'n'; td.textContent = fmtUsd(Number(v)); }
         else if (c === 'records') { td.className = 'n'; td.textContent = String(v); }
-        else td.textContent = c === 'arm' ? named(String(v)) : String(v);
+        else td.textContent = c === 'arm' ? full(String(v)) : c === 'split' ? (SPLIT[v] || String(v)) : c === 'vendor' ? MAKER(String(v)) : String(v);
         tr.append(td);
       }
       tbody.append(tr);

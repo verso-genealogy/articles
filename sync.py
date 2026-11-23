@@ -17,6 +17,10 @@ from pathlib import Path
 ROOT = Path(__file__).parent
 CHARTS = ("leaders", "leaders-price", "leaders-flagged", "effort-levels", "generations", "cost-vs-silent")
 OTHER_CONDITION = re.compile(r"-(e\d+|priors|ctx|places|example|people\d+|openrouter|noblank)(-r\d+)?$")
+#: Runs of the debug sample that did not answer: nearly every reply was cut at the length limit of the answer
+#: (5, 12, 2 and 0 records of 20 answered), so their points say nothing of reading.
+CUT_SHORT = {("dev", "gemini-4-carbon-high"), ("dev", "gemini-4-neon-high"), ("dev", "gemini-4-neon-xhigh"),
+             ("dev", "gemini-4-hydrogen-xhigh")}
 
 
 def main(corpus: Path, bench: Path) -> None:
@@ -27,7 +31,7 @@ def main(corpus: Path, bench: Path) -> None:
     kept = {"records": arms["records"], "arms": arms["arms"], "twice": arms.get("twice", {})}
     (ROOT / "data/arms.json").write_text(json.dumps(kept, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     rows = json.loads((bench / "report/dashboard.json").read_text(encoding="utf-8"))
-    rows = [r for r in rows if not OTHER_CONDITION.search(r["arm"])]
+    rows = [r for r in rows if not OTHER_CONDITION.search(r["arm"]) and (r["split"], r["arm"]) not in CUT_SHORT]
     for r in rows:                      # a configuration read more than once stands as the mean of its runs, as in the tables
         pooled = kept["twice"].get(r["arm"]) if r["split"] == "test" else None
         if pooled:
