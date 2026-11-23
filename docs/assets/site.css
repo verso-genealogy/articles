@@ -63,3 +63,17 @@ main.text .table-box { width: min(900px, calc(100vw - 32px)); margin-left: 50%; 
 /* The chart inside an article breaks out of the text column as a table does. */
 main.text .hb-embed { width: min(900px, calc(100vw - 32px)); margin: 22px 0 22px 50%; transform: translateX(-50%); font-size: 15px; }
 main.text .hb-embed img { margin: 0 auto; }
+/* The line under an article's title, as a blog has it: the author, the date, the share button. */
+.byline { position: relative; display: flex; flex-wrap: wrap; align-items: center; gap: 6px 16px; margin: -4px 0 24px; padding-bottom: 14px; border-bottom: 1px solid var(--line); color: var(--muted); font-size: 15px; }
+.byline .author { display: inline-flex; align-items: center; gap: 7px; color: var(--fg); font-weight: 600; text-decoration: none; }
+.byline .author:hover { text-decoration: underline; }
+.byline .gh { width: 16px; height: 16px; fill: currentColor; }
+.byline .share { margin-left: auto; }
+.byline-end { margin: 36px 0 0; padding: 14px 0 0; border-bottom: 0; border-top: 1px solid var(--line); }
+.share { font: inherit; font-size: 14px; color: var(--fg); background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 5px 14px; cursor: pointer; }
+.share:hover, .share[aria-expanded="true"] { border-color: var(--axis); }
+.share:focus-visible, .share-menu > :focus-visible { outline: 2px solid var(--link); outline-offset: 2px; }
+.share-menu { position: absolute; right: 0; top: calc(100% - 8px); z-index: 5; display: flex; flex-direction: column; min-width: 200px; padding: 6px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+.byline-end .share-menu { top: auto; bottom: calc(100% - 6px); }
+.share-menu > * { display: block; text-align: left; font: inherit; font-size: 15px; color: var(--fg); background: none; border: 0; border-radius: 6px; padding: 7px 10px; text-decoration: none; cursor: pointer; }
+.share-menu > :hover { background: var(--code); }

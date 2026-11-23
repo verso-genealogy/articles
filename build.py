@@ -12,6 +12,7 @@ import html
 import json
 import re
 import shutil
+from datetime import date
 from pathlib import Path
 
 import markdown
@@ -21,6 +22,18 @@ OUT = ROOT / "docs"
 SITE = "Чтение старинных документов моделями"
 NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма и таблица"))
 REPO = "https://github.com/verso-genealogy/verso"
+#: Where the site is served: the address a link to a page is shared with.
+URL = "https://verso-genealogy.github.io/articles/"
+AUTHOR = ("Дмитрий Мальчиков", "https://github.com/dmalch")
+#: The date each article was published.
+PUBLISHED = {"models": date(2026, 11, 23)}
+MONTHS = ("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря")
+GITHUB_MARK = ('<svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59'
+               '.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53'
+               '.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15'
+               '-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16'
+               ' 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46'
+               '.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>')
 #: Where an article's preview on the home page ends: a line of its own in the article's text.
 CUT = "<!--more-->"
 HEAD = ("№", "Модель", "effort", "Тихих ошибок", "Всех ошибок", "Полей под вопросом", "$ за 100 записей", "Прогонов")
@@ -65,6 +78,32 @@ def page(title: str, body: str, depth: int, *, here: str = "", wide: bool = Fals
 </body>
 </html>
 """
+
+
+def byline(name: str, *, share: bool) -> str:
+    """The author, linked to his profile, the date of the article, and (on the article itself) the share button."""
+    day = PUBLISHED[name]
+    button = ('<button type="button" class="share" aria-haspopup="menu" aria-expanded="false">Поделиться</button>'
+              if share else "")
+    return (f'<div class="byline"><a class="author" href="{AUTHOR[1]}">{GITHUB_MARK}{html.escape(AUTHOR[0])}</a>'
+            f'<time datetime="{day.isoformat()}">{day.day} {MONTHS[day.month - 1]} {day.year}</time>{button}</div>')
+
+
+def summary(text: str) -> str:
+    """An article's first paragraph as plain text: what a shared link shows under its title."""
+    first = next(b for b in text.split("\n\n")[1:] if b.strip() and not b.startswith(("#", "!", "{{", "<!--")))
+    return re.sub(r"\[([^\]]+)\]\([^)]+\)", r"\1", first).replace("**", "").replace("*", "").strip()
+
+
+def meta(title: str, description: str, path: str, published: date | None = None) -> str:
+    """What a link to the page shows when shared: its title, its first lines, its address."""
+    tags = [("og:type", "article" if published else "website"), ("og:title", title), ("og:description", description),
+            ("og:url", URL + path), ("og:site_name", SITE), ("og:locale", "ru_RU")]
+    if published:
+        tags.append(("article:published_time", published.isoformat()))
+    out = "".join(f'<meta property="{k}" content="{html.escape(v)}">\n' for k, v in tags)
+    return (out + f'<meta name="description" content="{html.escape(description)}">\n'
+            f'<meta name="author" content="{html.escape(AUTHOR[0])}">\n<link rel="canonical" href="{URL + path}">\n')
 
 
 def configurations() -> list[dict]:
@@ -146,9 +185,13 @@ def article(name: str, slug: str) -> None:
     body = body.replace("<p>{{CHART}}</p>", chart_embed())
     body = re.sub(r"<table>", '<div class="table-box"><table class="data">', body).replace("</table>", "</table></div>")
     body = re.sub(r'<p>(<img [^>]+>)</p>', r'<figure>\1</figure>', body)
+    body = body.replace("</h1>", "</h1>\n" + byline(name, share=True), 1)
+    end = f'<div class="byline byline-end">{byline(name, share=True).split("</time>")[1].removesuffix("</div>")}</div>'
+    head = meta(title, summary(text), f"{slug}/", PUBLISHED[name]) + (CHART_HEAD if charted else "")
     (OUT / slug).mkdir(parents=True, exist_ok=True)
     (OUT / slug / "index.html").write_text(
-        page(title, f"<article>{body}</article>", 1, here=f"{slug}/", extra_head=CHART_HEAD if charted else ""), encoding="utf-8")
+        page(title, f"<article>{body}\n{end}</article>\n" + '<script src="../assets/share.js"></script>', 1,
+             here=f"{slug}/", extra_head=head), encoding="utf-8")
 
 
 def moved(old: str, new: str) -> None:
@@ -177,17 +220,18 @@ def home() -> None:
     opening = text[:text.index(CUT)].split("\n", 1)[1].replace("](../", "](")
     body = f"""<article>
 <h1><a class="title" href="models/">{html.escape(title)}</a></h1>
+{byline("models", share=False)}
 {markdown.markdown(opening, extensions=["tables", "fenced_code"])}
 <p><a class="more" href="models/#more">Читать далее</a></p>
 </article>"""
-    (OUT / "index.html").write_text(page(SITE, body, 0), encoding="utf-8")
+    (OUT / "index.html").write_text(page(SITE, body, 0, extra_head=meta(SITE, summary(text), "")), encoding="utf-8")
 
 
 def build() -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "assets").mkdir(parents=True)
-    for name in ("site.css", "chart.css", "chart.js"):
+    for name in ("site.css", "chart.css", "chart.js", "share.js"):
         shutil.copy(ROOT / "static" / name, OUT / "assets" / name)
     shutil.copytree(ROOT / "content/img", OUT / "img")
     (OUT / "data").mkdir()
