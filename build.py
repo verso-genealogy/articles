@@ -1,4 +1,4 @@
-"""Builds the site into docs/ (what GitHub Pages serves): the article, the full table, the interactive chart.
+"""Builds the site into docs/ (what GitHub Pages serves): the article and the page of the interactive chart and the full table.
 
     uv run --no-project --with markdown python build.py
 
@@ -19,7 +19,7 @@ import markdown
 ROOT = Path(__file__).parent
 OUT = ROOT / "docs"
 SITE = "Чтение старинных документов моделями"
-NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма"), ("table/", "Все конфигурации"))
+NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма и таблица"))
 REPO = "https://github.com/verso-genealogy/verso"
 #: Where an article's preview on the home page ends: a line of its own in the article's text.
 CUT = "<!--more-->"
@@ -90,7 +90,7 @@ def configurations() -> list[dict]:
     return out
 
 
-def table(rows: list[dict], *, ident: str = "") -> str:
+def table(rows: list[dict]) -> str:
     """The rows as a table; the count of runs is a column only where it differs between the rows."""
     runs = len({a["runs"] for a in rows}) > 1
     head = "".join(f"<th{' class=\"n\"' if n == 0 or n > 2 else ''}>{html.escape(h)}</th>"
@@ -102,7 +102,7 @@ def table(rows: list[dict], *, ident: str = "") -> str:
             (a["silent"], ru(a["silent"])), (a["all"], ru(a["all"])), (a["flagged"], ru(a["flagged"]) + " %"),
             (a["cost"], ru(a["cost"], 2)), *([(a["runs"], str(a["runs"]))] if runs else []))) + "</tr>"
         for a in rows)
-    return (f'<div class="table-box"><table{f" id={ident!r}" if ident else ""} class="data">'
+    return (f'<div class="table-box"><table class="data">'
             f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>")
 
 
@@ -151,16 +151,15 @@ def article(name: str, slug: str) -> None:
         page(title, f"<article>{body}</article>", 1, here=f"{slug}/", extra_head=CHART_HEAD if charted else ""), encoding="utf-8")
 
 
-def full_table() -> None:
-    rows = configurations()
-    body = f"""<h1>Все конфигурации</h1>
-<p class="lead">{len(rows)} конфигураций на 167 записях. Ошибки на 100 полей имен (имя, отчество, фамилия). Тихая ошибка: неверное имя,
-которое модель не поставила под вопрос. Цена: чтение 100 записей через пакетный API по ноябрьским ценам. Там, где
-конфигурация прочитана дважды, стоит среднее двух прогонов. Заголовок столбца сортирует таблицу.</p>
-{table(rows, ident="all")}
-<script src="../assets/sort.js"></script>"""
-    (OUT / "table").mkdir(parents=True, exist_ok=True)
-    (OUT / "table" / "index.html").write_text(page("Все конфигурации", body, 1, here="table/", wide=True), encoding="utf-8")
+def moved(old: str, new: str) -> None:
+    """A page that was folded into another: its address still leads there."""
+    target = "../" + new
+    (OUT / old).mkdir(parents=True, exist_ok=True)
+    (OUT / old / "index.html").write_text(f"""<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>{html.escape(SITE)}</title>
+<meta http-equiv="refresh" content="0; url={target}"><link rel="canonical" href="{target}"></head>
+<body><p><a href="{target}">Таблица теперь стоит на странице диаграммы</a></p></body></html>
+""", encoding="utf-8")
 
 
 def chart() -> None:
@@ -188,7 +187,7 @@ def build() -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "assets").mkdir(parents=True)
-    for name in ("site.css", "chart.css", "chart.js", "sort.js"):
+    for name in ("site.css", "chart.css", "chart.js"):
         shutil.copy(ROOT / "static" / name, OUT / "assets" / name)
     shutil.copytree(ROOT / "content/img", OUT / "img")
     (OUT / "data").mkdir()
@@ -196,7 +195,7 @@ def build() -> None:
     (OUT / ".nojekyll").write_text("", encoding="utf-8")
     home()
     article("models", "models")
-    full_table()
+    moved("table", "chart/#table")
     chart()
     print(f"{OUT}: {sum(1 for p in OUT.rglob('*') if p.is_file())} files")
 

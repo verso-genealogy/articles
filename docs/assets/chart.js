@@ -193,6 +193,28 @@ const dash = (() => {
   const MARK = {Claude: '<circle r="5"/>', Google: '<path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/>', OpenAI: '<rect x="-4.5" y="-4.5" width="9" height="9"/>',
     xAI: '<path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z"/>', Alibaba: '<path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z"/>'};
   const MARK_CLASS = {Claude: 'claude', Google: 'google', OpenAI: 'openai', xAI: 'xai', Alibaba: 'alibaba'};
+  // A pressed header sorts the table; the order holds when a filter redraws it.
+  let order = null;                                   // {col, down} or null: by silent errors, as drawn
+  let jumped = false;                                 // the jump to a linked part, once the data are drawn
+  const sortRows = (tbody) => {
+    if (!order) return;
+    const value = (tr) => { const td = tr.cells[order.col]; return td.hasAttribute('data-v') ? Number(td.getAttribute('data-v')) : td.textContent; };
+    const rows = [...tbody.rows].sort((a, b) => {
+      const x = value(a), y = value(b);
+      return (typeof x === 'number' ? x - y : String(x).localeCompare(String(y), 'ru')) * (order.down ? -1 : 1);
+    });
+    tbody.append(...rows);
+  };
+  document.querySelectorAll('table.data[data-source] thead th').forEach((th, col, heads) => {
+    th.setAttribute('data-sort', '');
+    th.addEventListener('click', () => {
+      const down = th.getAttribute('aria-sort') === 'ascending';
+      heads.forEach((h) => h.removeAttribute('aria-sort'));
+      th.setAttribute('aria-sort', down ? 'descending' : 'ascending');
+      order = {col, down};
+      sortRows(th.closest('table').tBodies[0]);
+    });
+  });
   dash.draw('table', (tbody) => {
     const g = dash.data('results');
     tbody.replaceChildren();
@@ -200,7 +222,10 @@ const dash = (() => {
     const all = g.data.filter((r) => r.split === 'test').sort((a, b) => Number(a.silent_per_100) - Number(b.silent_per_100));
     let place = 0;
     const places = new Map(all.map((r) => [r.arm, r.arm.endsWith('-ultrahigh') ? '–' : String(++place)]));
-    const cell = (text, numeric) => { const td = document.createElement('td'); if (numeric) td.className = 'n'; td.textContent = text; return td; };
+    const cell = (text, numeric, v) => {
+      const td = document.createElement('td'); if (numeric) td.className = 'n'; td.textContent = text;
+      if (v != null) td.setAttribute('data-v', String(v)); return td;
+    };
     for (const r of all.filter((x) => shown(x.arm))) {
       const [model, level, ...rest] = full(r.arm).split(', ');
       const name = cell('', false);
@@ -208,12 +233,21 @@ const dash = (() => {
       svg.setAttribute('class', `mark mark-${MARK_CLASS[r.vendor] || 'claude'}`); svg.setAttribute('viewBox', '-6 -6 12 12');
       svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', MAKER(r.vendor)); svg.innerHTML = MARK[r.vendor] || MARK.Claude;
       name.append(svg, document.createTextNode([model, ...rest].join(', ')));
-      const first = cell(places.get(r.arm), true); first.classList.add('place');
+      const first = cell(places.get(r.arm), true, places.get(r.arm) === '–' ? 999 : Number(places.get(r.arm))); first.classList.add('place');
       const tr = document.createElement('tr');
-      tr.append(first, name, cell(level, false), cell(RU.format('.1f')(Number(r.silent_per_100)), true),
-        cell(RU.format('.1f')(Number(r.errors_per_100)), true), cell(RU.format('.1f')(Number(r.flagged_pct)) + ' %', true),
-        cell(RU.format('.2f')(Number(r.usd_per_100_batch)), true), cell(String(r.runs || 1), true));
+      tr.append(first, name, cell(level, false), cell(RU.format('.1f')(Number(r.silent_per_100)), true, r.silent_per_100),
+        cell(RU.format('.1f')(Number(r.errors_per_100)), true, r.errors_per_100),
+        cell(RU.format('.1f')(Number(r.flagged_pct)) + ' %', true, r.flagged_pct),
+        cell(RU.format('.2f')(Number(r.usd_per_100_batch)), true, r.usd_per_100_batch), cell(String(r.runs || 1), true, r.runs || 1));
       tbody.append(tr);
+    }
+    sortRows(tbody);
+    // A link to a part of the page (#table) jumps before the data come and the charts above it are drawn, which
+    // pushes the part down: once they are, jump there again.
+    if (!jumped) {
+      jumped = true;
+      const target = location.hash && document.getElementById(location.hash.slice(1));
+      if (target) target.scrollIntoView();
     }
   });
 })();
