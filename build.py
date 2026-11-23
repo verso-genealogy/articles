@@ -237,7 +237,7 @@ def home() -> None:
     body = f"""<article>
 <h1><a class="title" href="models/">{html.escape(title)}</a></h1>
 {byline("models", share=False)}
-{markdown.markdown(opening, extensions=["tables", "fenced_code"])}
+{re.sub(r'<p>(<img [^>]+>)</p>', r'<figure>\1</figure>', markdown.markdown(opening, extensions=["tables", "fenced_code"]))}
 <p><a class="more" href="models/#more">Читать далее</a></p>
 </article>"""
     (OUT / "index.html").write_text(page(SITE, body, 0, extra_head=meta(SITE, summary(text), "")), encoding="utf-8")
