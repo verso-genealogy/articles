@@ -110,11 +110,14 @@ def meta(title: str, description: str, path: str, published: date | None = None)
     """What a link to the page shows when shared: its title, its first lines, its address."""
     tags = [("og:type", "article" if published else "website"), ("og:title", title), ("og:description", description),
             ("og:url", URL + path), ("og:site_name", SITE), ("og:locale", "ru_RU")]
+    tags += [("og:image", URL + "img/cover.jpg"), ("og:image:width", "1200"), ("og:image:height", "675"),
+             ("og:image:alt", "Ревизская сказка 1850 года: дважды написано Настасья, модели читают Наталья")]
     if published:
         tags.append(("article:published_time", published.isoformat()))
     out = "".join(f'<meta property="{k}" content="{html.escape(v)}">\n' for k, v in tags)
     return (out + f'<meta name="description" content="{html.escape(description)}">\n'
-            f'<meta name="author" content="{html.escape(AUTHOR[0])}">\n<link rel="canonical" href="{URL + path}">\n')
+            f'<meta name="author" content="{html.escape(AUTHOR[0])}">\n<meta name="twitter:card" content="summary_large_image">\n'
+            f'<link rel="canonical" href="{URL + path}">\n')
 
 
 def configurations() -> list[dict]:
