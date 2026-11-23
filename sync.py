@@ -16,7 +16,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent
 CHARTS = ("leaders", "leaders-price", "leaders-flagged", "effort-levels", "generations", "cost-vs-silent")
-OTHER_CONDITION = re.compile(r"-(e\d+|priors|ctx|places|example|people\d+|openrouter|noblank)(-r\d+)?$")
+OTHER_CONDITION = re.compile(r"-(e\d+|priors|ctx|places|example|people\d+|openrouter|noblank|ultrahigh)(-r\d+)?$")
 #: Runs of the debug sample that did not answer: nearly every reply was cut at the length limit of the answer
 #: (5, 12, 2 and 0 records of 20 answered), so their points say nothing of reading.
 CUT_SHORT = {("dev", "gemini-4-carbon-high"), ("dev", "gemini-4-neon-high"), ("dev", "gemini-4-neon-xhigh"),
