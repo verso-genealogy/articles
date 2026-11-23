@@ -91,11 +91,11 @@ def page(title: str, body: str, depth: int, *, here: str = "", wide: bool = Fals
 """
 
 
-def byline(name: str, *, share: bool) -> str:
-    """The author, linked to his profile, the date of the article, and (on the article itself) the share button."""
+def byline(name: str, slug: str, title: str) -> str:
+    """The author, linked to his profile, the date of the article, and the button that shares the article."""
     day = PUBLISHED[name]
-    button = ('<button type="button" class="share" aria-haspopup="menu" aria-expanded="false">Поделиться</button>'
-              if share else "")
+    button = (f'<button type="button" class="share" aria-haspopup="menu" aria-expanded="false" data-url="{URL}{slug}/" '
+              f'data-title="{html.escape(title)}">Поделиться</button>')
     return (f'<div class="byline"><a class="author" href="{AUTHOR[1]}">{GITHUB_MARK}{html.escape(AUTHOR[0])}</a>'
             f'<time datetime="{day.isoformat()}">{day.day} {MONTHS[day.month - 1]} {day.year}</time>{button}</div>')
 
@@ -199,8 +199,8 @@ def article(name: str, slug: str) -> None:
     body = body.replace("<p>{{CHART}}</p>", chart_embed())
     body = re.sub(r"<table>", '<div class="table-box"><table class="data">', body).replace("</table>", "</table></div>")
     body = re.sub(r'<p>(<img [^>]+>)</p>', r'<figure>\1</figure>', body)
-    body = body.replace("</h1>", "</h1>\n" + byline(name, share=True), 1)
-    end = f'<div class="byline byline-end">{byline(name, share=True).split("</time>")[1].removesuffix("</div>")}</div>'
+    body = body.replace("</h1>", "</h1>\n" + byline(name, slug, title), 1)
+    end = f'<div class="byline byline-end">{byline(name, slug, title).split("</time>")[1].removesuffix("</div>")}</div>'
     head = meta(title, summary(text), f"{slug}/", PUBLISHED[name]) + (CHART_HEAD if charted else "")
     (OUT / slug).mkdir(parents=True, exist_ok=True)
     (OUT / slug / "index.html").write_text(
@@ -236,10 +236,11 @@ def home() -> None:
     opening = text[:text.index(CUT)].split("\n", 1)[1].replace("](../", "](")
     body = f"""<article>
 <h1><a class="title" href="models/">{html.escape(title)}</a></h1>
-{byline("models", share=False)}
+{byline("models", "models", title)}
 {re.sub(r'<p>(<img [^>]+>)</p>', r'<figure>\1</figure>', markdown.markdown(opening, extensions=["tables", "fenced_code"]))}
 <p><a class="more" href="models/#more">Читать далее</a></p>
-</article>"""
+</article>
+<script src="assets/share.js"></script>"""
     (OUT / "index.html").write_text(page(SITE, body, 0, extra_head=meta(SITE, summary(text), "")), encoding="utf-8")
 
 

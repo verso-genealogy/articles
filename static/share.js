@@ -1,8 +1,9 @@
 // The share button: the system's own sheet where there is one (phones), else a menu of a few places and a copied link.
 (() => {
-  const url = document.querySelector('link[rel=canonical]')?.href || location.href.split('#')[0];
-  const title = document.title;
-  const places = [
+  // What a button shares: the article it names (data-url), else this page.
+  const page = document.querySelector('link[rel=canonical]')?.href || location.href.split('#')[0];
+  const target = (button) => ({url: button.dataset.url || page, title: button.dataset.title || document.title});
+  const places = ({url, title}) => [
     ['Telegram', `https://t.me/share/url?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`],
     ['ВКонтакте', `https://vk.com/share.php?url=${encodeURIComponent(url)}`],
     ['X', `https://x.com/intent/post?url=${encodeURIComponent(url)}&text=${encodeURIComponent(title)}`],
@@ -10,7 +11,7 @@
   const close = () => document.querySelectorAll('.share-menu').forEach((m) => {
     m.previousElementSibling?.setAttribute('aria-expanded', 'false'); m.remove();
   });
-  const copy = async (item) => {
+  const copy = async (item, url) => {
     try { await navigator.clipboard.writeText(url); item.textContent = 'Ссылка скопирована'; }
     catch { window.prompt('Ссылка на статью', url); }
     setTimeout(close, 1200);
@@ -18,8 +19,9 @@
   document.querySelectorAll('button.share').forEach((button) => {
     button.addEventListener('click', async (event) => {
       event.stopPropagation();
+      const what = target(button);
       if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-        try { await navigator.share({title, url}); } catch { /* the reader closed the sheet */ }
+        try { await navigator.share(what); } catch { /* the reader closed the sheet */ }
         return;
       }
       const open = button.getAttribute('aria-expanded') === 'true';
@@ -29,9 +31,9 @@
       menu.className = 'share-menu'; menu.setAttribute('role', 'menu');
       const link = document.createElement('button');
       link.type = 'button'; link.setAttribute('role', 'menuitem'); link.textContent = 'Скопировать ссылку';
-      link.addEventListener('click', (e) => { e.stopPropagation(); copy(link); });
+      link.addEventListener('click', (e) => { e.stopPropagation(); copy(link, what.url); });
       menu.append(link);
-      for (const [name, href] of places) {
+      for (const [name, href] of places(what)) {
         const a = document.createElement('a');
         a.href = href; a.target = '_blank'; a.rel = 'noopener'; a.setAttribute('role', 'menuitem'); a.textContent = name;
         menu.append(a);
