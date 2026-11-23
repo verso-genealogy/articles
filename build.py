@@ -21,6 +21,8 @@ OUT = ROOT / "docs"
 SITE = "Чтение старинных документов моделями"
 NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма"), ("table/", "Все конфигурации"))
 REPO = "https://github.com/verso-genealogy/verso"
+#: Where an article's preview on the home page ends: a line of its own in the article's text.
+CUT = "<!--more-->"
 HEAD = ("№", "Модель", "effort", "Тихих ошибок", "Всех ошибок", "Полей под вопросом", "$ за 100 записей", "Прогонов")
 #: A vendor by the start of a run's name, and its mark: the shape and the colour the chart draws it with.
 VENDORS = (("gemini", "google"), ("gpt", "openai"), ("grok", "xai"), ("qwen", "alibaba"))
@@ -138,7 +140,7 @@ def article(name: str, slug: str) -> None:
     main = json.loads((ROOT / "data/main-table.json").read_text(encoding="utf-8"))["main"]
     rows = [a for a in configurations() if a["run"] in main]
     title = re.search(r"^# (.+)$", text, re.M).group(1)
-    body = markdown.markdown(text, extensions=["tables", "fenced_code"])
+    body = markdown.markdown(text.replace(CUT, '<div id="more"></div>'), extensions=["tables", "fenced_code"])
     body = body.replace("<p>{{TABLE}}</p>", table(rows))
     charted = "<p>{{CHART}}</p>" in body
     body = body.replace("<p>{{CHART}}</p>", chart_embed())
@@ -170,18 +172,15 @@ def chart() -> None:
 
 
 def home() -> None:
-    best = configurations()[:3]
-    cards = "".join(f'<li><b>{html.escape(a["model"])}, {html.escape(a["effort"])}</b><span>{ru(a["silent"])} тихой ошибки на 100 имен, '
-                    f'${ru(a["cost"], 2)} за 100 записей</span></li>' for a in best)
-    body = f"""<h1>Какой моделью читать старинные документы</h1>
-<p class="lead">Замер того, как большие языковые модели читают русские метрические книги и ревизские сказки XVIII-XIX веков:
-{len(configurations())} конфигурации, 167 записей из четырех приходов и пяти архивов, оценка по именам, отчествам и фамилиям.</p>
-<ul class="best">{cards}</ul>
-<div class="doors">
-  <a href="models/"><b>Какой моделью читать</b><span>Статья: сравнение моделей и уровней effort, цены, выводы.</span></a>
-  <a href="chart/"><b>Диаграмма</b><span>Цена против качества для каждой конфигурации, с фильтрами по моделям и мерам.</span></a>
-  <a href="table/"><b>Все конфигурации</b><span>Полная таблица, сортируется по любому столбцу.</span></a>
-</div>"""
+    """The home page: the article's title and its opening, up to the cut, and the way on into the article."""
+    text = (ROOT / "content/models.md").read_text(encoding="utf-8")
+    title = re.search(r"^# (.+)$", text, re.M).group(1)
+    opening = text[:text.index(CUT)].split("\n", 1)[1].replace("](../", "](")
+    body = f"""<article>
+<h1><a class="title" href="models/">{html.escape(title)}</a></h1>
+{markdown.markdown(opening, extensions=["tables", "fenced_code"])}
+<p><a class="more" href="models/#more">Читать далее</a></p>
+</article>"""
     (OUT / "index.html").write_text(page(SITE, body, 0), encoding="utf-8")
 
 
