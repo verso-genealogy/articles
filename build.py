@@ -29,6 +29,7 @@ PROFILE = "https://github.com/dmalch"
 PUBLISHED = {"models": date(2026, 11, 23)}
 #: Where an article's preview on the home page ends: a line of its own in the article's text.
 CUT = "<!--more-->"
+GOATCOUNTER = ""   # the site's code at goatcounter.com (<code>.goatcounter.com); empty: no counter on the pages
 GITHUB_MARK = ('<svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59'
                '.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53'
                '.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15'
@@ -123,6 +124,13 @@ def theme_switch(lang: str) -> str:
             '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button></div>')
 
 
+def counter() -> str:
+    """The visit counter's script (GoatCounter: no cookies); nothing until the site has a code."""
+    if not GOATCOUNTER:
+        return ""
+    return f'<script data-goatcounter="https://{GOATCOUNTER}.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>\n'
+
+
 def page(title: str, body: str, lang: str, depth: int, *, here: str = "", wide: bool = False, extra_head: str = "") -> str:
     """A page of the site in `lang`; `here` is its path within the language's part ("" the home page)."""
     words = LANGS[lang]
@@ -144,7 +152,7 @@ def page(title: str, body: str, lang: str, depth: int, *, here: str = "", wide: 
 <script>try{{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}}catch(e){{}}</script>
 <link rel="license" href="{words["license"]}">
 {alternates}<link rel="stylesheet" href="{root}assets/site.css">
-{extra_head}</head>
+{extra_head}{counter()}</head>
 <body>
 <header class="site-head">
   <a class="site-name" href="{home or "./"}">{html.escape(words["site"])}</a>
