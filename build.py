@@ -224,7 +224,9 @@ def chart() -> None:
     (OUT / "chart").mkdir(parents=True, exist_ok=True)
     (OUT / "chart" / "index.html").write_text(
         page("Диаграмма: цена и качество чтения", body + '\n<script src="../assets/chart.js"></script>', 1, here="chart/",
-             wide=True, extra_head=CHART_HEAD), encoding="utf-8")
+             wide=True, extra_head=meta("Диаграмма: цена и качество чтения",
+                                        "Цена и ошибки чтения для каждой из конфигураций LLM: диаграмма с фильтрами и полная таблица.",
+                                        "chart/") + CHART_HEAD), encoding="utf-8")
 
 
 def home() -> None:
