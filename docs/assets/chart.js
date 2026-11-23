@@ -188,26 +188,31 @@ const dash = (() => {
   dash.draw('chart-test', (el) => scatter(el, 'test'));
   dash.draw('chart-dev', (el) => scatter(el, 'dev'));
 
+  // The table of the main set, as the page of all configurations draws it: the place among models at a level
+  // (a variant of one stands unnumbered), the vendor's mark, one decimal.
+  const MARK = {Claude: '<circle r="5"/>', Google: '<path d="M0,-5.5L5.5,4.5L-5.5,4.5Z"/>', OpenAI: '<rect x="-4.5" y="-4.5" width="9" height="9"/>',
+    xAI: '<path d="M0,-5.5L4.5,0L0,5.5L-4.5,0Z"/>', Alibaba: '<path d="M-4.5,-1.5H-1.5V-4.5H1.5V-1.5H4.5V1.5H1.5V4.5H-1.5V1.5H-4.5Z"/>'};
+  const MARK_CLASS = {Claude: 'claude', Google: 'google', OpenAI: 'openai', xAI: 'xai', Alibaba: 'alibaba'};
   dash.draw('table', (tbody) => {
     const g = dash.data('results');
     tbody.replaceChildren();
     if (g.status !== 'ok') return;
-    const cols = ['split', 'arm', 'vendor', 'records', 'review_per_100', 'errors_per_100', 'silent_per_100', 'loud_per_100', 'flagged_pct', 'usd_per_100_batch'];
-    const key = METRICS[metric()];
-    const rows = g.data.filter((r) => shown(r.arm)).sort((a, b) => (a.split === b.split ? Number(a[key]) - Number(b[key]) : a.split === 'test' ? -1 : 1));
-    for (const r of rows) {
+    const all = g.data.filter((r) => r.split === 'test').sort((a, b) => Number(a.silent_per_100) - Number(b.silent_per_100));
+    let place = 0;
+    const places = new Map(all.map((r) => [r.arm, r.arm.endsWith('-ultrahigh') ? '–' : String(++place)]));
+    const cell = (text, numeric) => { const td = document.createElement('td'); if (numeric) td.className = 'n'; td.textContent = text; return td; };
+    for (const r of all.filter((x) => shown(x.arm))) {
+      const [model, level, ...rest] = full(r.arm).split(', ');
+      const name = cell('', false);
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('class', `mark mark-${MARK_CLASS[r.vendor] || 'claude'}`); svg.setAttribute('viewBox', '-6 -6 12 12');
+      svg.setAttribute('role', 'img'); svg.setAttribute('aria-label', MAKER(r.vendor)); svg.innerHTML = MARK[r.vendor] || MARK.Claude;
+      name.append(svg, document.createTextNode([model, ...rest].join(', ')));
+      const first = cell(places.get(r.arm), true); first.classList.add('place');
       const tr = document.createElement('tr');
-      tr.setAttribute('data-key', `${encodeURIComponent(r.split)},${encodeURIComponent(r.arm)}`);
-      for (const c of cols) {
-        const td = document.createElement('td');
-        const v = r[c];
-        if (c === 'review_per_100' || c === 'silent_per_100' || c === 'loud_per_100' || c === 'errors_per_100') { td.className = 'n'; td.textContent = RU.format('.2f')(Number(v)); }
-        else if (c === 'flagged_pct') { td.className = 'n'; td.textContent = RU.format('.1f')(Number(v)); }
-        else if (c === 'usd_per_100_batch') { td.className = 'n'; td.textContent = fmtUsd(Number(v)); }
-        else if (c === 'records') { td.className = 'n'; td.textContent = String(v); }
-        else td.textContent = c === 'arm' ? full(String(v)) : c === 'split' ? (SPLIT[v] || String(v)) : c === 'vendor' ? MAKER(String(v)) : String(v);
-        tr.append(td);
-      }
+      tr.append(first, name, cell(level, false), cell(RU.format('.1f')(Number(r.silent_per_100)), true),
+        cell(RU.format('.1f')(Number(r.errors_per_100)), true), cell(RU.format('.1f')(Number(r.flagged_pct)) + ' %', true),
+        cell(RU.format('.2f')(Number(r.usd_per_100_batch)), true), cell(String(r.runs || 1), true));
       tbody.append(tr);
     }
   });

@@ -95,20 +95,12 @@
 
   <section class="hb-card" id="table">
     <h2>Все конфигурации</h2>
-    <p class="hb-note">Таблица следует фильтру моделей и отсортирована по выбранной мере. Все числа на 100 полей имен, кроме доли полей под вопросом и цены.</p>
-    <div class="hb-table-box">
-      <table class="hb-table" data-source="results" data-row-key="split,arm">
+    <p class="hb-note">Основной набор, 167 записей. Таблица следует фильтру моделей. Ошибки на 100 полей имен, цена за 100 записей. Та же таблица с сортировкой по любому столбцу стоит <a href="../table/">на отдельной странице</a>.</p>
+    <div class="table-box">
+      <table class="data" data-source="results">
         <thead><tr>
-          <th data-field="split">набор</th>
-          <th data-field="arm">конфигурация</th>
-          <th data-field="vendor">производитель</th>
-          <th data-field="records" class="n">записей</th>
-          <th data-field="review_per_100" class="n">цена вычитки</th>
-          <th data-field="errors_per_100" class="n">всех ошибок</th>
-          <th data-field="silent_per_100" class="n">тихих</th>
-          <th data-field="loud_per_100" class="n">ошибок под вопросом</th>
-          <th data-field="flagged_pct" class="n">% полей под вопросом</th>
-          <th data-field="usd_per_100_batch" class="n">$ на 100 записей</th>
+          <th class="n">№</th><th>Модель</th><th>effort</th><th class="n">Тихих ошибок</th><th class="n">Всех ошибок</th>
+          <th class="n">Полей под вопросом</th><th class="n">$ за 100 записей</th><th class="n">Прогонов</th>
         </tr></thead>
         <tbody data-draw="table"></tbody>
       </table>
