@@ -247,6 +247,17 @@ def home() -> None:
     (OUT / "index.html").write_text(page(SITE, body, 0, extra_head=meta(SITE, summary(text), "")), encoding="utf-8")
 
 
+def sitemap() -> None:
+    """The pages a search engine should know, for Search Console and Yandex Webmaster: the home page, each
+    article (dated by its publication), the chart page; a moved page's address is left out."""
+    pages = [("", max(PUBLISHED.values())), *((f"{slug}/", PUBLISHED[slug]) for slug in PUBLISHED), ("chart/", None)]
+    urls = "".join(f"<url><loc>{URL}{path}</loc>{f'<lastmod>{day.isoformat()}</lastmod>' if day else ''}</url>\n"
+                   for path, day in pages)
+    (OUT / "sitemap.xml").write_text('<?xml version="1.0" encoding="UTF-8"?>\n'
+                                     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + urls + "</urlset>\n",
+                                     encoding="utf-8")
+
+
 def build() -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -260,6 +271,7 @@ def build() -> None:
     home()
     article("models", "models")
     moved("table", "chart/#table")
+    sitemap()
     chart()
     print(f"{OUT}: {sum(1 for p in OUT.rglob('*') if p.is_file())} files")
 
