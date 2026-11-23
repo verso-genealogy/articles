@@ -72,12 +72,15 @@ def configurations() -> list[dict]:
 
 
 def table(rows: list[dict], *, ident: str = "") -> str:
-    head = "".join(f"<th{' class=\"n\"' if n > 1 else ''}>{html.escape(h)}</th>" for n, h in enumerate(HEAD))
+    """The rows as a table; the count of runs is a column only where it differs between the rows."""
+    runs = len({a["runs"] for a in rows}) > 1
+    head = "".join(f"<th{' class=\"n\"' if n > 1 else ''}>{html.escape(h)}</th>"
+                   for n, h in enumerate(HEAD if runs else HEAD[:-1]))
     body = "".join(
         "<tr>" + f"<td>{html.escape(a['model'])}</td><td>{html.escape(a['effort'])}</td>"
         + "".join(f'<td class="n" data-v="{v}">{text}</td>' for v, text in (
             (a["silent"], ru(a["silent"])), (a["all"], ru(a["all"])), (a["flagged"], ru(a["flagged"]) + " %"),
-            (a["cost"], ru(a["cost"], 2)), (a["runs"], str(a["runs"])))) + "</tr>"
+            (a["cost"], ru(a["cost"], 2)), *([(a["runs"], str(a["runs"]))] if runs else []))) + "</tr>"
         for a in rows)
     return (f'<div class="table-box"><table{f" id={ident!r}" if ident else ""} class="data">'
             f"<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>")

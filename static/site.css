@@ -37,7 +37,10 @@ code { font: .9em ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; back
 pre code { background: none; padding: 0; font-size: inherit; }
 .table-box { overflow-x: auto; margin: 0 0 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
 table.data { border-collapse: collapse; width: 100%; font-size: 15px; font-variant-numeric: tabular-nums; }
-table.data th, table.data td { padding: 7px 12px; text-align: left; border-bottom: 1px solid var(--line); white-space: nowrap; }
+table.data th, table.data td { padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--line); }
+table.data td { white-space: nowrap; }
+table.data td:first-child { white-space: normal; min-width: 9.5em; }
+table.data th { vertical-align: bottom; line-height: 1.25; }
 table.data tr:last-child td { border-bottom: 0; }
 table.data th { font-weight: 600; color: var(--muted); background: var(--panel); position: sticky; top: 0; }
 table.data .n { text-align: right; }
@@ -54,3 +57,6 @@ table.data th[aria-sort="descending"]::after { content: " ↓"; }
 .doors b { display: block; margin-bottom: 4px; color: var(--link); }
 .doors span { color: var(--muted); font-size: 15px; }
 .site-foot { border-top: 1px solid var(--line); padding: 18px 16px 28px; color: var(--muted); font-size: 14px; text-align: center; }
+/* A table of an article may be wider than its column of text, up to the page's width. */
+main.text .table-box { width: min(900px, calc(100vw - 32px)); margin-left: 50%; transform: translateX(-50%); }
+@media (max-width: 560px) { table.data { font-size: 13px; } table.data th, table.data td { padding: 6px 7px; } }
