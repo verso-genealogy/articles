@@ -22,6 +22,7 @@ OUT = ROOT / "docs"
 SITE = "Чтение старинных документов моделями"
 NAV = (("models/", "Какой моделью читать"), ("chart/", "Диаграмма и таблица"))
 REPO = "https://github.com/verso-genealogy/verso"
+LICENSE = "https://creativecommons.org/licenses/by/4.0/deed.ru"
 #: Where the site is served: the address a link to a page is shared with.
 URL = "https://verso-genealogy.github.io/articles/"
 AUTHOR = ("Дмитрий Мальчиков", "https://github.com/dmalch")
@@ -73,6 +74,7 @@ def page(title: str, body: str, depth: int, *, here: str = "", wide: bool = Fals
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
 <script>try{{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}}catch(e){{}}</script>
+<link rel="license" href="{LICENSE}">
 <link rel="stylesheet" href="{up}assets/site.css">
 {extra_head}</head>
 <body>
@@ -84,7 +86,8 @@ def page(title: str, body: str, depth: int, *, here: str = "", wide: bool = Fals
 <main class="{'wide' if wide else 'text'}">
 {body}
 </main>
-<footer class="site-foot">Набор взят из корпуса, записи которого хранятся как код. Инструменты для него собраны в библиотеке <a href="{REPO}">verso</a>.</footer>
+<footer class="site-foot"><p>Набор взят из корпуса, записи которого хранятся как код. Инструменты для него собраны в библиотеке <a href="{REPO}">verso</a>.</p>
+<p>Текст, диаграммы и данные: © {html.escape(AUTHOR[0])}, <a href="{LICENSE}" rel="license">CC BY 4.0</a>. Кадры архивных документов в лицензию не входят.</p></footer>
 <script src="{up}assets/theme.js"></script>
 </body>
 </html>

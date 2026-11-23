@@ -93,3 +93,5 @@ main.text .hb-embed img { margin: 0 auto; }
 .theme button:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
 .theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 @media (max-width: 640px) { .site-name { flex: 1; } .theme { order: 1; } .site-head nav { order: 2; width: 100%; } }
+.site-foot p { margin: 0 0 6px; }
+.site-foot p:last-child { margin: 0; }
