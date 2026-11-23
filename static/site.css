@@ -1,15 +1,23 @@
-/* Tokens: light by default, dark by the reader's system. */
+/* Tokens: light by default, dark by the reader's system, or the theme the reader chose (data-theme on <html>). */
 :root {
+  color-scheme: light;
   --bg: #fcfcfb; --panel: #ffffff; --fg: #1a1a18; --muted: #5f5e5a; --line: #e1e0d9; --axis: #c3c2b7;
   --link: #1c5cab; --accent: #eb6834; --code: #f3f2ee; --shadow: 0 6px 24px rgba(0, 0, 0, .12);
   --c-claude: #eb6834; --c-google: #2a78d6; --c-openai: #1baf7a; --c-xai: #8a5cd0; --c-alibaba: #c79a1e;
 }
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
     --bg: #171716; --panel: #1f1f1d; --fg: #ecebe6; --muted: #a3a29b; --line: #34332f; --axis: #55544e;
     --link: #86b6ef; --code: #262623; --shadow: 0 6px 24px rgba(0, 0, 0, .5);
     --c-claude: #f08455; --c-google: #5c9be6; --c-openai: #3fc394; --c-xai: #a887e0; --c-alibaba: #d9b340;
   }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #171716; --panel: #1f1f1d; --fg: #ecebe6; --muted: #a3a29b; --line: #34332f; --axis: #55544e;
+  --link: #86b6ef; --code: #262623; --shadow: 0 6px 24px rgba(0, 0, 0, .5);
+  --c-claude: #f08455; --c-google: #5c9be6; --c-openai: #3fc394; --c-xai: #a887e0; --c-alibaba: #d9b340;
 }
 * { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -77,3 +85,11 @@ main.text .hb-embed img { margin: 0 auto; }
 .byline-end .share-menu { top: auto; bottom: calc(100% - 6px); }
 .share-menu > * { display: block; text-align: left; font: inherit; font-size: 15px; color: var(--fg); background: none; border: 0; border-radius: 6px; padding: 7px 10px; text-decoration: none; cursor: pointer; }
 .share-menu > :hover { background: var(--code); }
+/* The theme switch: light, dark, or as the system has it. */
+.theme { display: inline-flex; margin-left: auto; align-self: center; border: 1px solid var(--line); border-radius: 999px; padding: 2px; gap: 2px; }
+.theme button { display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 26px; padding: 0; border: 0; border-radius: 999px; background: none; color: var(--muted); cursor: pointer; }
+.theme button:hover { color: var(--fg); }
+.theme button[aria-pressed="true"] { background: var(--code); color: var(--fg); }
+.theme button:focus-visible { outline: 2px solid var(--link); outline-offset: 1px; }
+.theme svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+@media (max-width: 640px) { .site-name { flex: 1; } .theme { order: 1; } .site-head nav { order: 2; width: 100%; } }

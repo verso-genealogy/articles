@@ -34,6 +34,14 @@ GITHUB_MARK = ('<svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path d="
                '-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16'
                ' 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46'
                '.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>')
+#: The theme switch in the header: light, dark, as the system has it (theme.js keeps the choice).
+THEME = ('<div class="theme" role="group" aria-label="Тема">'
+         '<button type="button" data-theme="light" aria-pressed="false" title="Светлая тема" aria-label="Светлая тема">'
+         '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>'
+         '<button type="button" data-theme="dark" aria-pressed="false" title="Темная тема" aria-label="Темная тема">'
+         '<svg viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>'
+         '<button type="button" data-theme="" aria-pressed="true" title="Как в системе" aria-label="Тема как в системе">'
+         '<svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></button></div>')
 #: Where an article's preview on the home page ends: a line of its own in the article's text.
 CUT = "<!--more-->"
 HEAD = ("№", "Модель", "effort", "Тихих ошибок", "Всех ошибок", "Полей под вопросом", "$ за 100 записей", "Прогонов")
@@ -64,17 +72,20 @@ def page(title: str, body: str, depth: int, *, here: str = "", wide: bool = Fals
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{html.escape(title)}</title>
+<script>try{{var t=localStorage.getItem("theme");if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}}catch(e){{}}</script>
 <link rel="stylesheet" href="{up}assets/site.css">
 {extra_head}</head>
 <body>
 <header class="site-head">
   <a class="site-name" href="{up}">{html.escape(SITE)}</a>
   <nav>{nav}<a href="{REPO}">verso</a></nav>
+  {THEME}
 </header>
 <main class="{'wide' if wide else 'text'}">
 {body}
 </main>
 <footer class="site-foot">Набор взят из корпуса, записи которого хранятся как код. Инструменты для него собраны в библиотеке <a href="{REPO}">verso</a>.</footer>
+<script src="{up}assets/theme.js"></script>
 </body>
 </html>
 """
@@ -231,7 +242,7 @@ def build() -> None:
     if OUT.exists():
         shutil.rmtree(OUT)
     (OUT / "assets").mkdir(parents=True)
-    for name in ("site.css", "chart.css", "chart.js", "share.js"):
+    for name in ("site.css", "chart.css", "chart.js", "share.js", "theme.js"):
         shutil.copy(ROOT / "static" / name, OUT / "assets" / name)
     shutil.copytree(ROOT / "content/img", OUT / "img")
     (OUT / "data").mkdir()

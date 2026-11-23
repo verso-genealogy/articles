@@ -11,6 +11,7 @@ const dash = (() => {
   let timer = 0;
   window.addEventListener('resize', () => { clearTimeout(timer); timer = setTimeout(render, 120); });
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', render);
+  window.addEventListener('themechange', render);
   document.addEventListener('DOMContentLoaded', () => {
     render();
     fetch('../data/results.json').then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
